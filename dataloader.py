@@ -1,15 +1,16 @@
 from torch.utils.data import Dataset
 import glob
 import numpy as np
-import json
+# import json
 import cv2
 import os
 import torch
 from tqdm import tqdm
 import random
 from img2graph import img2graph
+from config import config
 
-config = json.load("../config.json")
+# config = json.load("../config.json")
 
 class GeneralDataLoader(Dataset):
 	def __init__(self, data_list):
