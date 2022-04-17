@@ -323,32 +323,15 @@ class MedicalDataLoader(Dataset):
 		return s_idx
 
 	def getitem_train(self):
-		## choose support and target
 		idx_space = [i for i in range(self.valid_img_n)]
-		# print(self.img_paths)
-		# print(self.valid_img_n, len(idx_space), self.n_shot)
-		# print(self.valid_img_n)
-		# if self.valid_img_n == 0:
-		#     return {
-		#         "s_x": torch.zeros((1, 1, 1, 256, 256)),
-		#         "s_y": torch.zeros((1, 1, 1, 256, 256)),
-		#         "q_x": torch.zeros((1, 1, 256, 256)),
-		#         "q_y": torch.zeros((1, 1, 256, 256)),
-		#         "s_fname": [['/scratch/cse/btech/cs1190341/CL_FSS/RawData/Training_2d_nocrop/5/train/img/0001/132.npy']],
-		#         "q_fname" :  ['/scratch/cse/btech/cs1190341/CL_FSS/RawData/Training_2d_nocrop/5/train/img/0009/117.npy']
-		#     }
-		subj_idxs = random.sample(idx_space, self.n_shot+1)
-		s_subj_idxs = subj_idxs[:self.n_shot]
-		q_subj_idx = subj_idxs[self.n_shot]
+		
+		subj_idxs = random.sample(idx_space, self.shot+1)
+		s_subj_idxs = subj_idxs[:self.shot]
+		q_subj_idx = subj_idxs[self.shot]
 		q_subj_img_path = self.img_paths[q_subj_idx]
 		q_subj_label_path = self.label_paths[q_subj_idx]
 		q_fnames = self.img_lists[q_subj_idx]
 		q_idx = random.randrange(0, len(q_fnames))
-
-		is_flip = False
-		if random.random() < 0.5:
-			is_flip = True
-			q_fnames.reverse()
 
 		s_img_paths_all, s_label_paths_all = [],[]
 		for s_subj_idx in s_subj_idxs:
@@ -356,13 +339,10 @@ class MedicalDataLoader(Dataset):
 			s_subj_label_path = self.label_paths[s_subj_idx]
 			s_fnames = self.img_lists[s_subj_idx]
 
-			## flip augmentation
-			if is_flip:
-				s_fnames.reverse()
-
 			## choose support and query slice
 			s_idx = self.handle_idx(len(s_fnames), q_idx, len(q_fnames))
 			s_fnames_selected = s_fnames[s_idx:s_idx+1]
+
 			## define path, load data, and return
 			s_img_paths_selected = [f"{s_subj_img_path}/{fname}" for fname in s_fnames_selected]
 			s_label_paths_selected = [f"{s_subj_label_path}/{fname}" for fname in s_fnames_selected]
@@ -385,7 +365,7 @@ class MedicalDataLoader(Dataset):
 		q_fnames = self.img_lists[q_subj_idx]
 
 		s_img_paths_all, s_label_paths_all = [],[]
-		for s_idx in range(self.n_shot):
+		for s_idx in range(self.shot):
 			s_subj_img_path = self.s_img_paths[s_idx]
 			s_subj_label_path = self.s_label_paths[s_idx]
 			s_fnames = self.s_fnames_list[s_idx]
