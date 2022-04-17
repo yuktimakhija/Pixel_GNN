@@ -1,0 +1,7 @@
+numpy
+torch
+torch_geometric
+pytorch_metric_learning
+opencv-python
+pycocotools
+scikit-image
