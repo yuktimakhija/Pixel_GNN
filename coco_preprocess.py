@@ -4,8 +4,9 @@ from PIL import Image
 import os
 from tqdm import tqdm
 import json
+from config import config
 
-config = json.load("../config.json")
+# config = json.load("../config.json")
 
 parts = ['train2017', 'val2017'] # use both train and val
 
