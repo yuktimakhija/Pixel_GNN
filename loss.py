@@ -1,6 +1,7 @@
 from pytorch_metric_learning.losses.generic_pair_loss import GenericPairLoss
 import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.distance import CosineSimilarity
 
 class Node2NodeSupConLoss(GenericPairLoss):
 	def __init__(self, **kwargs):
@@ -17,10 +18,10 @@ class Node2NodeSupConLoss(GenericPairLoss):
 				current_label= graph['y'][node]
 				pos_indices = torch.where(graph['y'] == current_label)
 				neg_indices = torch.where(graph['y'] != current_label)
-				pos_loss = torch.sum(torch.exp())
+				pos_loss = torch.sum(torch.exp(CosineSimilarity()))
 
 		self.pos_pairs = torch.where(graphs == )
-		self.neg_pairs = torch.where(graphs  != )
+		self.neg_pairs = torch.where(graphs != )
 		# pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
 		# neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
 
