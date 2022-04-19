@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset
 import glob
 import numpy as np
-# import json
+import json
 import cv2
 import os
 import torch
@@ -17,6 +17,7 @@ class GeneralDataLoader(Dataset):
 		self.dataset = config['dataset']
 		self.split = config['split']
 		self.shot = config['shot']
+		self.mode = config['mode']
 		if self.dataset == 'COCO':
 			self.path = config['coco_path']
 			if config['split'] == 0:
@@ -37,7 +38,7 @@ class GeneralDataLoader(Dataset):
 			raise ValueError("Wrong Dataset (General)")
 
 		if self.mode == 'train':
-			self.data_list, self.sub_class_file_list = make_dataset(self.split, self.path, self.training_classes)
+			self.data_list, self.sub_class_file_list = make_dataset(self.split, self.path, data_list, self.training_classes)
 			assert len(self.sub_class_file_list.keys()) == len(self.training_classes)
 		elif self.mode == 'val':
 			self.data_list, self.sub_class_file_list = make_dataset(self.split, self.path, data_list, self.testing_classes)
