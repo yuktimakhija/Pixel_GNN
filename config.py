@@ -1,6 +1,6 @@
 config = {
 	# Parameters to change during runs
-	"dataset": "bcv",
+	"dataset": "BCV",
 	"split": 0, # 0-3 for coco
 	"test_dataset": "",
 
