@@ -55,6 +55,7 @@ def img2graph(img, label=None):
 	k = 2
 	alpha, beta = 1, 1
 	edges = [[],[]]
+	edgelist = []
 	edge_weights = []
 	num_nodes = n**2
 
@@ -63,31 +64,57 @@ def img2graph(img, label=None):
 		return -(alpha*abs(x[i] - x[j]) + beta*abs(y[i] - y[j]))
 
 	def addedge(a, b):
-		if a < 0 or a >= num_nodes or b < 0 or b >= num_nodes:
+		if a < 0 or a >= num_nodes or b < 0 or b >= num_nodes or (a,b) in edgelist:
 			return
+		edgelist.append((a,b))
 		edges[0].append(a)
 		edges[1].append(b)
 		if label is not None:
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) + beta*abs(y[a] - y[b]))])
 		else:
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) )])
+		print(f"Edge b/w {a} & {b}")
 		# edges.append([a,b])
+
+	# def addedge2(a, b, ch):
+	# 	if a < 0 or a >= num_nodes or b < 0 or b >= num_nodes:
+	# 		return
+	# 	if ch=='left' && (b%n)
+	# 	edges[0].append(a)
+	# 	edges[1].append(b)
+	# 	if label is not None:
+	# 		edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) + beta*abs(y[a] - y[b]))])
+	# 	else:
+	# 		edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) )])
+	# 	print(f"Edge b/w {a} & {b}")
+	# 	# edges.append([a,b])
 		
 
 	# def addweight():
 
 	for i in tqdm(range(n**2)):
-		for j in range(1,k):
+		for j in range(1,k+1):
 			# todo: vectorize these calls ?
-			addedge(i, i-j) #left
+			if (i%n != 0):
+				addedge(i, i-j) #left
 			addedge(i, i-n*j) #top
-			addedge(i, i+j) #right
+			if (i%n != n-1):
+				addedge(i, i+j) #right
 			addedge(i, i+n*j) #bottom
 			for l in range(1,j+1): #diagonal
-				addedge(i, i-n*j -l) #top left
-				addedge(i, i-n*j +l) #top right
-				addedge(i, i+n*j -l) #bottom left
-				addedge(i, i+n*j +l) #bottom right
+				if (i%n != 0):
+					addedge(i, i-n*j -l) #top left
+					addedge(i, i+n*j -l) #bottom left
+				if (i%n != n-1):
+					addedge(i, i-n*j +l) #top right
+					addedge(i, i+n*j +l) #bottom right
+				if ((i+j)%n > j-1):
+					addedge(i, i+j-n*l)
+					addedge(i, i+j+n*l)
+				if ((i-j)%n < n-j):
+					addedge(i, i-j-n*l)
+					addedge(i, i-j+n*l)
+		# print(f"Edges of {i} = {edges[0]}")
 
 	edges = torch.tensor(edges, dtype = torch.long)
 	edge_weights = torch.tensor(edge_weights, dtype = torch.float)
