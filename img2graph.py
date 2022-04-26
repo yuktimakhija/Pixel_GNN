@@ -162,10 +162,10 @@ def support_graph(support_images, support_labels):
 					addedge(i+k*nn, i+j+k*nn) #right
 				addedge(i+k*nn, i+n*j+k*nn) #bottom
 				for l in range(1,j+1): #diagonal
-					if (i%n != 0):
+					if ((i-l)%n < n-l):
 						addedge(i+k*nn, i-n*j -l+k*nn) #top left
 						addedge(i+k*nn, i+n*j -l+k*nn) #bottom left
-					if (i%n != n-1):
+					if ((i+l)%n > l-1):
 						addedge(i+k*nn, i-n*j +l+k*nn) #top right
 						addedge(i+k*nn, i+n*j +l+k*nn) #bottom right
 					if ((i+j)%n > j-1):
@@ -177,24 +177,24 @@ def support_graph(support_images, support_labels):
 				# Inter-graph connections
 				if (k != 0):
 					addedge(k*nn +i, i + (k-1)*nn) # directly below
-					if (i%n != 0):
+					if ((i-1)%n < n-1):
 						addedge(k*nn+i, i-1+(k-1)*nn) #left
 						addedge(k*nn+i, i-1+(k-1)*nn-n) # top left
 						addedge(k*nn+i, i-1+(k-1)*nn+n) # bottom left
 					addedge(i+k*nn, i-n+(k-1)*nn) #top
-					if (i%n != n-1):
+					if ((i+1)%n > 0):
 						addedge(i+k*nn, i+1+(k-1)*nn) #right
 						addedge(i+k*nn, i+1+(k-1)*nn -n) # top right
 						addedge(i+k*nn, i+1+(k-1)*nn +n) # bottom right
 					addedge(i+k*nn, i+n+(k-1)*nn) #bottom
 				if (k != num_images-1):
 					addedge(k*nn +i, i + (k+1)*nn) # directly above
-					if (i%n != 0):
+					if ((i-1)%n < n-1):
 						addedge(k*nn+i, i-1+(k+1)*nn) #left
 						addedge(k*nn+i, i-1+(k+1)*nn-n) # top left
 						addedge(k*nn+i, i-1+(k+1)*nn+n) # bottom left
 					addedge(i+k*nn, i-n+(k+1)*nn) #top
-					if (i%n != n-1):
+					if ((i+1)%n > 0):
 						addedge(i+k*nn, i+1+(k+1)*nn) #right
 						addedge(i+k*nn, i+1+(k+1)*nn -n) # top right
 						addedge(i+k*nn, i+1+(k+1)*nn +n) # bottom right
