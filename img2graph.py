@@ -52,8 +52,8 @@ def img2graph(img, label=None):
 		y = torch.tensor(label.reshape(-1,1), dtype = torch.float) # same
 	# make edges connect with neighbours at distance of 2
 
-	k = 2
-	alpha, beta = 1, 1
+	num_neighbors = config['num_neighbors']
+	alpha, beta = config['alpha'], config['beta']
 	edges = [[],[]]
 	edgelist = []
 	edge_weights = []
@@ -93,7 +93,7 @@ def img2graph(img, label=None):
 	# def addweight():
 
 	for i in tqdm(range(n**2)):
-		for j in range(1,k+1):
+		for j in range(1,num_neighbors+1):
 			# todo: vectorize these calls ?
 			if (i%n != 0):
 				addedge(i, i-j) #left
@@ -122,17 +122,99 @@ def img2graph(img, label=None):
 	return Data(x=x, y=y, edge_index=edges, edge_attr=edge_weights)
 	# else return Data(x=x, edge_index=edges, edge_attr=edge_weights)
 
-def visualise_graph(data):
-	import matplotlib.pyplot as plt
-	import igraph as ig
-	adj = torch_geometric.utils.to_dense_adj(data['edge_index'], edge_attr=data['edge_attr'])
-	g = ig.Graph.Weighted_Adjacency(adj.tolist()[0])
-	l = g.layout('lgl')
-	ig.plot(g, layout=l)
-	# plt.show()
+def support_graph(support_images, support_labels):
+	num_images = len(support_images)
+	n = support_images[0].shape[0]
+	num_neighbors = 1 #number of neighbours (between graphs)	
+	nn = n**2;
+	alpha, beta = config['alpha'], config['beta']
+	dataset = config['dataset']
+	edges = [[],[]]
+	edgelist = []
+	edge_weights = []
+	x = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in support_images])
+	y = None
+	if support_labels is not None:
+		y = torch.cat([torch.tensor(label.reshape(-1,1), dtype = torch.float) for label in support_labels]) # same
+	num_node_features = 3 if dataset in ['coco'] else 1
+	# x = torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) # [num_nodes, num_node_features]
 
-if __name__ == "__main__":
-	img = np.load("sample_bcv/img.npy")
-	label = np.load("sample_bcv/label.npy")
-	data = img2graph(img,label)
-	visualise_graph(data)
+	def addedge(a, b):
+		if a < 0 or a >= nn or b < 0 or b >= nn or (a,b) in edgelist:
+			return
+		edgelist.append((a,b))
+		edges[0].append(a)
+		edges[1].append(b)
+		if support_labels is not None:
+			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) + beta*abs(y[a] - y[b]))])
+		else:
+			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) )])
+		print(f"Edge b/w {a} & {b}")
+
+	for k in range(num_images):
+		for i in range(nn):	
+			for j in range(1,num_neighbors+1):
+				# Intra-graph connections
+				if (i%n != 0):
+					addedge(k*nn+i, i-j+k*nn) #left
+				addedge(i+k*nn, i-n*j+k*nn) #top
+				if (i%n != n-1):
+					addedge(i+k*nn, i+j+k*nn) #right
+				addedge(i+k*nn, i+n*j+k*nn) #bottom
+				for l in range(1,j+1): #diagonal
+					if (i%n != 0):
+						addedge(i+k*nn, i-n*j -l+k*nn) #top left
+						addedge(i+k*nn, i+n*j -l+k*nn) #bottom left
+					if (i%n != n-1):
+						addedge(i+k*nn, i-n*j +l+k*nn) #top right
+						addedge(i+k*nn, i+n*j +l+k*nn) #bottom right
+					if ((i+j)%n > j-1):
+						addedge(i+k*nn, i+j-n*l+k*nn)
+						addedge(i+k*nn, i+j+n*l+k*nn)
+					if ((i-j)%n < n-j):
+						addedge(i+k*nn, i-j-n*l+k*nn)
+						addedge(i+k*nn, i-j+n*l+k*nn)
+				# Inter-graph connections
+				if (k != 0):
+					addedge(k*nn +i, i + (k-1)*nn) # directly below
+					if (i%n != 0):
+						addedge(k*nn+i, i-1+(k-1)*nn) #left
+						addedge(k*nn+i, i-1+(k-1)*nn-n) # top left
+						addedge(k*nn+i, i-1+(k-1)*nn+n) # bottom left
+					addedge(i+k*nn, i-n+(k-1)*nn) #top
+					if (i%n != n-1):
+						addedge(i+k*nn, i+1+(k-1)*nn) #right
+						addedge(i+k*nn, i+1+(k-1)*nn -n) # top right
+						addedge(i+k*nn, i+1+(k-1)*nn +n) # bottom right
+					addedge(i+k*nn, i+n+(k-1)*nn) #bottom
+				if (k != num_images-1):
+					addedge(k*nn +i, i + (k+1)*nn) # directly above
+					if (i%n != 0):
+						addedge(k*nn+i, i-1+(k+1)*nn) #left
+						addedge(k*nn+i, i-1+(k+1)*nn-n) # top left
+						addedge(k*nn+i, i-1+(k+1)*nn+n) # bottom left
+					addedge(i+k*nn, i-n+(k+1)*nn) #top
+					if (i%n != n-1):
+						addedge(i+k*nn, i+1+(k+1)*nn) #right
+						addedge(i+k*nn, i+1+(k+1)*nn -n) # top right
+						addedge(i+k*nn, i+1+(k+1)*nn +n) # bottom right
+					addedge(i+k*nn, i+n+(k+1)*nn) #bottom
+				
+							
+
+
+# def visualise_graph(data):
+# 	import matplotlib.pyplot as plt
+# 	import igraph as ig
+# 	adj = torch_geometric.utils.to_dense_adj(data['edge_index'], edge_attr=data['edge_attr'])
+# 	g = ig.Graph.Weighted_Adjacency(adj.tolist()[0])
+# 	l = g.layout('lgl')
+# 	ig.plot(g, layout=l)
+# 	# plt.show()
+
+# if __name__ == "__main__":
+# 	img = np.load("sample_bcv/img.npy")
+# 	label = np.load("sample_bcv/label.npy")
+# 	data = img2graph(img,label)
+# 	visualise_graph(data)
+
