@@ -102,10 +102,10 @@ def img2graph(img, label=None):
 				addedge(i, i+j) #right
 			addedge(i, i+n*j) #bottom
 			for l in range(1,j+1): #diagonal
-				if (i%n != 0):
+				if ((i-l)%n < n-l):
 					addedge(i, i-n*j -l) #top left
 					addedge(i, i+n*j -l) #bottom left
-				if (i%n != n-1):
+				if ((i+l)%n > l-1):
 					addedge(i, i-n*j +l) #top right
 					addedge(i, i+n*j +l) #bottom right
 				if ((i+j)%n > j-1):
