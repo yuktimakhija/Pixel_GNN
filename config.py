@@ -24,4 +24,8 @@ config = {
 	# General Dataset paths
 	"coco_path": "",
 	# "bcv_path": "",
+	
+	# CL
+	"batch_size": 4,
+	
 }

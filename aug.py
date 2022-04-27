@@ -7,6 +7,8 @@ import copy
 import pdb
 import numpy as np
 from collections import Counter
+from torch_geometric.data import Data
+import torch_geometric.utils
 
 
 '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''

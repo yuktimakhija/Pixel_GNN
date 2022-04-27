@@ -8,6 +8,7 @@ import json
 
 dataset = config['dataset']
 img_dim = 3 # for COCO/any color datasets
+batch_size = config['batch_size']
 dataset_type = 'general'
 if dataset in ['BCV', "CT_ORG", "DECATHLON"]:
 	img_dim = 1
@@ -18,7 +19,10 @@ model = GNN(img_dim)
 if dataset_type == 'general':
 	lists_path = config['lists_path'] + '/coco/'
 	train_list = json.load(open(lists_path + 'train_list.json'))
-	trainloader = dataloader.GeneralDataLoader(train_list)
+	train_data = dataloader.GeneralDataLoader(train_list)
+	trainloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, 
+												pin_memory = True, drop_last=True) 
+
 
 elif dataset_type == 'medical':
 
