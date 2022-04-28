@@ -15,6 +15,11 @@ config = {
 	"alpha": 1,
 	"beta": 1,
 
+	# loss variables
+	"num_anchors": 1000,
+	"num_samples": 1000,
+	"temp": 0.07, # (default value used in a lot of places)
+
 
 	# Medical Dataset paths
 	"bcv_path": "",
