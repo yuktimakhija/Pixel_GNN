@@ -7,7 +7,7 @@ import os
 import torch
 from tqdm import tqdm
 import random
-from img2graph import img2graph
+from img2graph import img2graph, support_graph
 from config import config
 
 # config = json.load("../config.json")
@@ -161,8 +161,8 @@ class GeneralDataLoader(Dataset):
 			for i in range(1, self.shot):
 				s_ey = torch.cat([s_eys[i].unsqueeze(0), s_ey], 0)   
 
-		q_graph = img2graph.img2graph(img, label)
-		s_graphs = [img2graph.img2graph(x,y) for x,y in zip(s_xs, s_ys)]
+		q_graph = img2graph(img, label)
+		s_graphs = support_graph(s_xs, s_ys)
 		if self.mode == 'train':
 			return q_graph, s_graphs, padding_mask, s_ey, subcls_list
 		else:

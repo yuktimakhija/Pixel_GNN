@@ -78,5 +78,5 @@ class Node2NodeSupConLoss(nn.Module):
 		# 	},
 		# }
 
-	def pairwise_loss(self, option):
-		# option tells whether to take 
+	# def pairwise_loss(self, option):
+	# 	# option tells whether to take 

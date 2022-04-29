@@ -29,7 +29,11 @@ elif dataset_type == 'medical':
 
 model.train()
 
-# iterate over dataloader and get a batch?
+# iterate over dataloader and get a batch
+for episode in range(config['n_episodes']):
+	print(f'Episode {episode}')
+
+	for 
 	# phase 1: CL
 	# make augmentations from images (are they needed if we are sampling)
 	# pass all through model and get embeddings

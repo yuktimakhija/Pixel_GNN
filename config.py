@@ -3,7 +3,7 @@ config = {
 	"dataset": "BCV",
 	"split": 0, # 0-3 for coco
 	"test_dataset": "",
-	"lists_path": "../lists/"
+	"lists_path": "../lists/",
 
 	"mode": "train", # or test/val
 	"shot": 3,
@@ -15,11 +15,13 @@ config = {
 	"alpha": 1,
 	"beta": 1,
 
-	# loss variables
+	# CL variables
 	"num_anchors": 1000,
 	"num_samples": 1000,
 	"temp": 0.07, # (default value used in a lot of places)
-
+	
+	"batch_size": 4,
+	"n_episodes": 100,
 
 	# Medical Dataset paths
 	"bcv_path": "",
@@ -29,8 +31,5 @@ config = {
 	# General Dataset paths
 	"coco_path": "",
 	# "bcv_path": "",
-	
-	# CL
-	"batch_size": 4,
 	
 }
