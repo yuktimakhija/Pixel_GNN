@@ -54,8 +54,6 @@ class GeneralDataLoader(Dataset):
 		img = np.float32(img)
 		label = cv2.imread(lblpath, cv2.IMREAD_GRAYSCALE)
 
-		padding_mask = np.zeros_like(label)
-
 		if img.shape[0] != label.shape[0] or img.shape[1] != label.shape[1]:
 			raise (RuntimeError("Query Image & label shape mismatch: " + imgpath + " " + lblpath + "\n"))          
 		label_classes = np.unique(label).tolist()
@@ -111,7 +109,6 @@ class GeneralDataLoader(Dataset):
 		# Now that we have paths for support images, read the images.
 		support_image_list = []
 		support_label_list = []
-		support_padding_list = []
 		subcls_list = []
 
 		for k in range(self.shot):
@@ -138,11 +135,9 @@ class GeneralDataLoader(Dataset):
 			if support_image.shape[0] != support_label.shape[0] or support_image.shape[1] != support_label.shape[1]:
 				raise (RuntimeError("Support Image & label shape mismatch: " + support_image_path + " " + support_label_path + "\n"))     
 
-			support_padding_label = np.zeros_like(support_label)
 			support_image_list.append(support_image)
 			support_label_list.append(support_label)
-			support_padding_list.append(support_padding_label)
-
+			
 		# Now we should have all support images 
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
 		
@@ -155,18 +150,12 @@ class GeneralDataLoader(Dataset):
 			s_x = torch.cat([s_xs[i].unsqueeze(0), s_x], 0)
 			s_y = torch.cat([s_ys[i].unsqueeze(0), s_y], 0)
 
-		if support_padding_list is not None:
-			s_eys = support_padding_list
-			s_ey = s_eys[0].unsqueeze(0)
-			for i in range(1, self.shot):
-				s_ey = torch.cat([s_eys[i].unsqueeze(0), s_ey], 0)   
-
 		q_graph = img2graph(img, label)
-		s_graphs = support_graph(s_xs, s_ys)
+		task_graph = support_graph(s_xs, s_ys)
 		if self.mode == 'train':
-			return q_graph, s_graphs, padding_mask, s_ey, subcls_list
+			return q_graph, task_graph, subcls_list
 		else:
-			return q_graph, s_graphs, padding_mask, s_ey, subcls_list, label.copy()
+			return q_graph, task_graph, subcls_list, label.copy()
 
 
 def make_dataset(split, path, data_list, training_classes):

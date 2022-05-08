@@ -1,5 +1,4 @@
 import imp
-from numpy import integer, negative
 # from pytorch_metric_learning.losses.generic_pair_loss import GenericPairLoss
 import torch
 import torch.nn as nn
@@ -10,9 +9,6 @@ from numpy.random import default_rng
 rng = default_rng()
 
 class Node2NodeSupConLoss(nn.Module):
-	def __init__(self, **kwargs):
-		super.__init__(mat_based_loss=False, **kwargs)
-	
 	def check_valid(self, y, sampled):
 		# get unique classes and counts per class
 		classes, counts = y[sampled].unique(return_counts=True)
@@ -50,7 +46,7 @@ class Node2NodeSupConLoss(nn.Module):
 		for anchor in selected_anchors:
 			sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
 			# while the sample is not valid, sample again.
-			while(self.check_valid(y, sampled_nodes)):
+			while(not self.check_valid(y, sampled_nodes)):
 				sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
 			positive_samples = torch.where(y[sampled_nodes] == y[anchor])
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0

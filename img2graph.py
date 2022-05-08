@@ -21,6 +21,8 @@ from tqdm import tqdm
 
 # config = json.load(open("config.py"))
 
+device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
+
 def img2graph(img, label=None):
 	n = img.shape[0] # 256
 
@@ -44,36 +46,32 @@ def img2graph(img, label=None):
 	dataset = config['dataset']
 	# num_node_features = 1
 	num_node_features = 3 if dataset in ['coco'] else 1
-	x = torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) # [num_nodes, num_node_features]
+	x = torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float).to(device) # [num_nodes, num_node_features]
 
 	# [[0.5] ,[0.1], [0.9] [1]]
 	y = None
 	if label is not None:
-		y = torch.tensor(label.reshape(-1,1), dtype = torch.float) # same
+		y = torch.tensor(label.reshape(-1,1), dtype = torch.float).to(device) # same
 	# make edges connect with neighbours at distance of 2
 
 	num_neighbors = config['num_neighbors']
 	alpha, beta = config['alpha'], config['beta']
 	edges = [[],[]]
-	edgelist = []
+	edgelist = {}
 	edge_weights = []
 	num_nodes = n**2
-
-	def similarity(i,j):
-		# needs to be vectorized/numpy usage ??
-		return -(alpha*abs(x[i] - x[j]) + beta*abs(y[i] - y[j]))
 
 	def addedge(a, b):
 		if a < 0 or a >= num_nodes or b < 0 or b >= num_nodes or (a,b) in edgelist:
 			return
-		edgelist.append((a,b))
+		edgelist[a].append(b)
 		edges[0].append(a)
 		edges[1].append(b)
 		if label is not None:
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) + beta*abs(y[a] - y[b]))])
 		else:
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) )])
-		print(f"Edge b/w {a} & {b}")
+		# print(f"Edge b/w {a} & {b}")
 		# edges.append([a,b])
 
 	# def addedge2(a, b, ch):
@@ -116,8 +114,8 @@ def img2graph(img, label=None):
 					addedge(i, i-j+n*l)
 		# print(f"Edges of {i} = {edges[0]}")
 
-	edges = torch.tensor(edges, dtype = torch.long)
-	edge_weights = torch.tensor(edge_weights, dtype = torch.float)
+	edges = torch.tensor(edges, dtype = torch.long).to(device)
+	edge_weights = torch.tensor(edge_weights, dtype = torch.float).to(device)
 	# if y is not None:
 	return Data(x=x, y=y, edge_index=edges, edge_attr=edge_weights)
 	# else return Data(x=x, edge_index=edges, edge_attr=edge_weights)
@@ -129,13 +127,14 @@ def support_graph(support_images, support_labels):
 	nn = n**2;
 	alpha, beta = config['alpha'], config['beta']
 	dataset = config['dataset']
+	num_node_features = 3 if dataset in ['coco'] else 1
 	edges = [[],[]]
 	edgelist = []
 	edge_weights = []
-	x = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in support_images])
+	x = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in support_images]).to(device)
 	y = None
 	if support_labels is not None:
-		y = torch.cat([torch.tensor(label.reshape(-1,1), dtype = torch.float) for label in support_labels]) # same
+		y = torch.cat([torch.tensor(label.reshape(-1,1), dtype = torch.float) for label in support_labels]).to(device) # same
 	num_node_features = 3 if dataset in ['coco'] else 1
 	# x = torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) # [num_nodes, num_node_features]
 
@@ -149,10 +148,10 @@ def support_graph(support_images, support_labels):
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) + beta*abs(y[a] - y[b]))])
 		else:
 			edge_weights.append([-(alpha*abs((x[a] - x[b]).mean()) )])
-		print(f"Edge b/w {a} & {b}")
+		# print(f"Edge b/w {a} & {b}")
 
 	for k in range(num_images):
-		for i in range(nn):	
+		for i in tqdm(range(nn)):
 			for j in range(1,num_neighbors+1):
 				# Intra-graph connections
 				if (i%n != 0):
@@ -199,8 +198,11 @@ def support_graph(support_images, support_labels):
 						addedge(i+k*nn, i+1+(k+1)*nn -n) # top right
 						addedge(i+k*nn, i+1+(k+1)*nn +n) # bottom right
 					addedge(i+k*nn, i+n+(k+1)*nn) #bottom
-				
-							
+	edges = torch.tensor(edges, dtype = torch.long).to(device)
+	edge_weights = torch.tensor(edge_weights, dtype = torch.float).to(device)
+	# if y is not None:
+	return Data(x=x, y=y, edge_index=edges, edge_attr=edge_weights)	
+						
 
 
 # def visualise_graph(data):
