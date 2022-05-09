@@ -193,8 +193,8 @@ def support_graph_matrix(labelled_images, labels, unlabelled_images):
 
 	k = 2
 
-	def without_diag(a):
-		indices = np.arange(nn).reshape(a.shape)
+	def intra_graph_connections(a, indices):
+		# indices = np.arange(nn).reshape(a.shape)
 		for i in range(1,k+1):
 			# right
 			edge_weights.append(np.abs((a[:, :-i] - a[:, i:]).reshape(-1, num_node_features)))
@@ -212,7 +212,6 @@ def support_graph_matrix(labelled_images, labels, unlabelled_images):
 			edge_weights.append(np.abs((a[i:, :] - a[:-i, :]).reshape(-1, num_node_features)))
 			edges[0].append(indices[i:, :].reshape(-1))
 			edges[1].append(indices[:-i, :].reshape(-1))
-			
 			# top right (diagonally)
 			edge_weights.append(np.abs((a[i:, :-i] - a[:-i, i:]).reshape(-1, num_node_features)))
 			edges[0].append(indices[i:, :-i].reshape(-1))
@@ -229,7 +228,42 @@ def support_graph_matrix(labelled_images, labels, unlabelled_images):
 			edge_weights.append(np.abs((a[i:, i:] - a[:-i, :-i]).reshape(-1, num_node_features)))
 			edges[0].append(indices[:-i, :-i].reshape(-1))
 			edges[1].append(indices[i:, i:].reshape(-1))
-			
+		
+		# remaining connections 
+		# 2 up and 1 right
+		edge_weights.append(np.abs((a[2:, :-1] - a[:-2, 1:]).reshape(-1, num_node_features)))
+		edges[0].append(indices[2:, :-1].reshape(-1))
+		edges[1].append(indices[:-2, 1:].reshape(-1))
+		# 2 down and 1 left
+		edge_weights.append(np.abs((a[2:, :-1] - a[:-2, 1:]).reshape(-1, num_node_features)))
+		edges[0].append(indices[:-2, 1:].reshape(-1))
+		edges[1].append(indices[2:, :-1].reshape(-1))
+		# 2 up and 1 left
+		edge_weights.append(np.abs((a[2:, 1:] - a[:-2, :-1]).reshape(-1, num_node_features)))
+		edges[0].append(indices[2:, 1:].reshape(-1))
+		edges[1].append(indices[:-2, :-1].reshape(-1))
+		# 2 down and 1 right
+		edge_weights.append(np.abs((a[2:, 1:] - a[:-2, :-1]).reshape(-1, num_node_features)))
+		edges[0].append(indices[:-2, :-1].reshape(-1))
+		edges[1].append(indices[2:, 1:].reshape(-1))
+		# 1 up and 2 right
+		edge_weights.append(np.abs((a[1:, :-2] - a[:-1, 2:]).reshape(-1, num_node_features)))
+		edges[0].append(indices[1:, :-2].reshape(-1))
+		edges[1].append(indices[:-1, 2:].reshape(-1))
+		# 1 down and 2 left
+		edge_weights.append(np.abs((a[1:, :-2] - a[:-1, 2:]).reshape(-1, num_node_features)))
+		edges[1].append(indices[1:, :-2].reshape(-1))
+		edges[0].append(indices[:-1, 2:].reshape(-1))
+		# 1 up and 2 left
+		edge_weights.append(np.abs((a[1:, 2:] - a[:-1, :-2]).reshape(-1, num_node_features)))
+		edges[0].append(indices[1:, 2:].reshape(-1))
+		edges[1].append(indices[:-1, :-2].reshape(-1))
+		# 1 down and 2 right	
+		edge_weights.append(np.abs((a[1:, 2:] - a[:-1, :-2]).reshape(-1, num_node_features)))
+		edges[1].append(indices[1:, 2:].reshape(-1))
+		edges[0].append(indices[:-1, :-2].reshape(-1))
+	
+	def inter_graph():
 
 # def visualise_graph(data):
 # 	import matplotlib.pyplot as plt
