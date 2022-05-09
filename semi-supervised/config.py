@@ -7,6 +7,7 @@ config = {
 
 	"mode": "train", # or test/val
 	"shot": 3,
+	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
 
