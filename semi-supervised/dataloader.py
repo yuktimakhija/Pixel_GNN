@@ -1,3 +1,4 @@
+from django import conf
 from torch.utils.data import Dataset
 import glob
 import numpy as np
@@ -7,17 +8,23 @@ import os
 import torch
 from tqdm import tqdm
 import random
-from img2graph import img2graph, support_graph
+from img2graph import img2graph, support_graph_matrix
 from config import config
 
 # config = json.load("../config.json")
 
 class GeneralDataLoader(Dataset):
-	def __init__(self, data_list):
+	def __init__(self, sup_data_list, unsup_data_list):
+		# sup_data_list is a list of 2-element lists of supervsied training data (20%)
+		# it is [ [img,label], [img,label], ....] 
+		# unsup_data_list is the same for unsupervsied training data (80%)
+		# it is [ [img,label], [img,label], ....] (only using labels to differentiate training and testing)
 		self.dataset = config['dataset']
 		self.split = config['split']
 		self.shot = config['shot']
+		self.unsup = config['unlabelled']
 		self.mode = config['mode']
+		self.rng = np.random.default_rng()
 		if self.dataset == 'COCO':
 			self.path = config['coco_path']
 			if config['split'] == 0:
@@ -38,18 +45,20 @@ class GeneralDataLoader(Dataset):
 			raise ValueError("Wrong Dataset (General)")
 
 		if self.mode == 'train':
-			self.data_list, self.sub_class_file_list = make_dataset(self.split, self.path, data_list, self.training_classes)
+			self.sup_data_list, self.sub_class_file_list, self.unsup_data_list =\
+				make_dataset(self.split, self.path, sup_data_list, unsup_data_list, self.training_classes)
 			assert len(self.sub_class_file_list.keys()) == len(self.training_classes)
 		elif self.mode == 'val':
-			self.data_list, self.sub_class_file_list = make_dataset(self.split, self.path, data_list, self.testing_classes)
+			self.sup_data_list, self.sub_class_file_list, self.unsup_data_list =\
+				make_dataset(self.split, self.path, sup_data_list, unsup_data_list, self.testing_classes)
 			assert len(self.sub_class_file_list.keys()) == len(self.testing_classes) 
 
 	def __len__(self):
-		return len(self.data_list)
+		return len(self.sup_data_list)
 
 	def __getitem__(self, idx):
 		# adapted from cyctr
-		imgpath, lblpath = self.data_list[idx]
+		imgpath, lblpath = self.sup_data_list[idx]
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
 		img = np.float32(img)
 		label = cv2.imread(lblpath, cv2.IMREAD_GRAYSCALE)
@@ -88,28 +97,44 @@ class GeneralDataLoader(Dataset):
 
 		file_class_chosen = self.sub_class_file_list[class_chosen]
 		num_file = len(file_class_chosen)
+		num_unsup_total = len(self.unsup_data_list)
 
 		support_image_path_list = []
 		support_label_path_list = []
-		support_idx_list = []
+		# support_idx_list = []
+		
 		# Choose support images randomly of the same class
-		for k in range(self.shot):
-			support_idx = random.randint(1,num_file)-1
-			support_image_path = imgpath
-			support_label_path = lblpath
-			# choose 1 random image
-			while((support_image_path == imgpath and support_label_path == lblpath) or support_idx in support_idx_list):
-				support_idx = random.randint(1,num_file)-1
-				support_image_path, support_label_path = file_class_chosen[support_idx]                
-			# add to support
-			support_idx_list.append(support_idx)
-			support_image_path_list.append(support_image_path)
-			support_label_path_list.append(support_label_path)
+		support_img_lbl_pairs = self.rng.choice(file_class_chosen, self.shot, replace=False)
+		# check that query is not chosen for support
+		while [imgpath,lblpath] in support_img_lbl_pairs:
+			support_img_lbl_pairs = self.rng.choice(file_class_chosen, self.shot, replace=False)
+	
+		support_image_path_list = support_img_lbl_pairs[:,0]
+		support_label_path_list = support_img_lbl_pairs[:,1]
 
+		# Choose unsupervised support images randomly of any training class
+		unsup_image_path_list = self.rng.choice(self.unsup_data_list, self.unsup, replace=False)
+		
+		# old code (cyctr)
+		# for k in range(self.shot):
+		# 	support_idx = random.randint(1,num_file)-1
+		# 	support_image_path = imgpath
+		# 	support_label_path = lblpath
+		# 	# choose 1 random image
+		# 	while((support_image_path == imgpath and support_label_path == lblpath) or support_idx in support_idx_list):
+		# 		support_idx = random.randint(1,num_file)-1
+		# 		support_image_path, support_label_path = file_class_chosen[support_idx]                
+		# 	# add to support
+		# 	support_idx_list.append(support_idx)
+		# 	support_image_path_list.append(support_image_path)
+		# 	support_label_path_list.append(support_label_path)
+		
 		# Now that we have paths for support images, read the images.
 		support_image_list = []
 		support_label_list = []
 		subcls_list = []
+
+		unsup_image_list = []
 
 		for k in range(self.shot):
 			if self.mode == 'train':
@@ -137,49 +162,51 @@ class GeneralDataLoader(Dataset):
 
 			support_image_list.append(support_image)
 			support_label_list.append(support_label)
+		
+		for k in range(self.unsup):
+			# same as above
+			unsup_image_path = unsup_image_path_list[k] 
+			unsup_image = cv2.imread(unsup_image_path, cv2.IMREAD_COLOR)      
+			unsup_image = cv2.cvtColor(unsup_image, cv2.COLOR_BGR2RGB)
+			unsup_image = np.float32(unsup_image)
+			
+			unsup_image_list.append(unsup_image)
 			
 		# Now we should have all support images 
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
-		
-		s_xs = support_image_list
-		s_ys = support_label_list
-		# tensor[1,2,3].unsqueeze(dim = 1) = tensor[[1],[2],[3]]
-		s_x = s_xs[0].unsqueeze(0)
-		s_y = s_ys[0].unsqueeze(0)
-		for i in range(1, self.shot):
-			s_x = torch.cat([s_xs[i].unsqueeze(0), s_x], 0)
-			s_y = torch.cat([s_ys[i].unsqueeze(0), s_y], 0)
+		assert len(unsup_image_list) == self.unsup
 
 		q_graph = img2graph(img, label)
-		task_graph = support_graph(s_xs, s_ys)
+		task_graph = support_graph_matrix(support_image_list, support_label_list, unsup_image_list)
 		if self.mode == 'train':
 			return q_graph, task_graph, subcls_list
 		else:
 			return q_graph, task_graph, subcls_list, label.copy()
 
 
-def make_dataset(split, path, data_list, training_classes):
+def make_dataset(split, path, data_list, unsup_data_list, training_classes):
 	assert split in [0, 1, 2, 3, 10, 11, 999]
 	if not os.path.isfile(data_list):
 		raise (RuntimeError("Image list file do not exist: " + data_list + "\n"))
 
 	split_data_list = data_list.split('.')[0] + '_split{}'.format(split) + '.pth'
 	if os.path.isfile(split_data_list):
-		image_label_list, sub_class_file_list = torch.load(split_data_list)
-		return image_label_list, sub_class_file_list
+		image_label_list, sub_class_file_list, unsup_image_list = torch.load(split_data_list)
+		return image_label_list, sub_class_file_list, unsup_image_list
 
-	image_label_list = []  
+	image_label_list = []
+	unsup_image_list = []
 	# list_read = open(data_list).readlines()
 	list_read = json.load(open(data_list))
+	unsup_list_read = json.load(open(unsup_data_list))
 	print("Processing data...")
 	sub_class_file_list = {}
 	for sub_c in training_classes:
 		sub_class_file_list[sub_c] = []
 
+	print('Making dataset (supervised)')
 	for l_idx in tqdm(range(len(list_read))):
 		line = list_read[l_idx]
-		# line = line.strip()
-		# line_split = line.split(' ')
 		line_split = line
 		image_name = os.path.join(path, line_split[0])
 		label_name = os.path.join(path, line_split[1])
@@ -208,13 +235,41 @@ def make_dataset(split, path, data_list, training_classes):
 			for c in label_class:
 				if c in training_classes:
 					sub_class_file_list[c].append(item)
+	
+	print('Making dataset (unsupervised)')
+	for l_idx in tqdm(range(len(unsup_list_read))):
+		line = unsup_list_read[l_idx]
+		line_split = line
+		image_name = os.path.join(path, line_split[0])
+		label_name = os.path.join(path, line_split[1])
+		label = cv2.imread(label_name, cv2.IMREAD_GRAYSCALE)
+		label_class = np.unique(label).tolist()
+
+		if 0 in label_class:
+			label_class.remove(0)
+		if 255 in label_class:
+			label_class.remove(255)
+
+		new_label_class = []       
+		for c in label_class:
+			if c in training_classes:
+				tmp_label = np.zeros_like(label)
+				target_pix = np.where(label == c)
+				tmp_label[target_pix[0],target_pix[1]] = 1 
+				if tmp_label.sum() >= 2 * 32 * 32:      
+					new_label_class.append(c)
+
+		label_class = new_label_class    
+
+		if len(label_class) > 0:
+			unsup_image_list.append(image_name)
 					
 	print("Checking image-label pair {} list done! ".format(split))
 
 	print("Saving processed data...")
-	torch.save((image_label_list, sub_class_file_list), split_data_list)
+	torch.save((image_label_list, sub_class_file_list, unsup_image_list), split_data_list)
 	print("Done")
-	return image_label_list, sub_class_file_list
+	return image_label_list, sub_class_file_list, unsup_image_list
 
 class MedicalDataLoader(Dataset):
 	def __init__(self, img_paths, label_paths):
