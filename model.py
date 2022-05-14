@@ -11,12 +11,29 @@ import torch.nn.functional as F
 from torch_geometric.nn import GATv2Conv
 
 
-class GNN(torch.nn.Module):
-	"""docstring for GNN"torch.nn.Module"""
-	def __init__(self, img_in_dim):
+class GNN_Encoder(torch.nn.Module):
+	def __init__(self, img_in_dim, emb_dep):
 		super().__init__()
-		self.layer1 = GATv2Conv(img_in_dim, 32) # img_dim is 3 [R,G,B]
-		self.layer2 = GATv2Conv(32, 32)
+		self.layer1 = GATv2Conv(img_in_dim, 8) # img_dim is 3 [R,G,B]
+		self.layer2 = GATv2Conv(8, 16)
+		self.layer3 = GATv2Conv(16, emb_dep)
+
+	def forward(self, data:Data):
+		x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
+		x, (edge_index, edge_attr) = self.layer1(x, edge_index, edge_attr, return_attention_weights = True)		
+		x = F.relu(x)
+		x = F.dropout(x, training= self.training)
+		x, (edge_index, edge_attr) = self.layer2(x, edge_index, edge_attr, return_attention_weights = True)
+		x = F.relu(x)
+		x = F.dropout(x, training= self.training)
+		x, (edge_index, edge_attr) = self.layer3(x, edge_index, edge_attr, return_attention_weights = True)
+		return x, (edge_index, edge_attr)
+
+class GNN_Decoder(torch.nn.Module):
+	def __init__(self, out_dim):
+		super().__init__()
+		self.layer1 = GATv2Conv(32, 16) # img_dim is 3 [R,G,B]
+		self.layer2 = GATv2Conv(16, out_dim)
 
 	def forward(self, data:Data):
 		x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
