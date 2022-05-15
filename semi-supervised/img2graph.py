@@ -407,7 +407,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 		elif index[i]< (M+num_label) : #unlabeled
 			x_unlabeled = torch.cat((x_unlabeled, torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float))).to(device)
 			x_task = torch.cat((x_task, torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float))).to(device)
-			y_task = torch.cat((y_task, torch.tensor(-torch.ones_like(x_task))))
+			y_task = torch.cat((y_task, torch.tensor(-torch.ones_like(x_task)))).to(device)
 			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
 			edge_weights_combined.append(ew)
 			edge_weights_unlabeled.append(ew)
@@ -452,9 +452,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edges_combined[0].append(e[0])
 				edges_combined[1].append(e[1])
 
-	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled)	
-	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled)	
-	task_graph = Data(x=x_task, y=y_task, edge_index=edges_combined, edge_attr=edge_weights_combined)	
+	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled).to(device)
+	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled).to(device)
+	task_graph = Data(x=x_task, y=y_task, edge_index=edges_combined, edge_attr=edge_weights_combined).to(device)
 	return query_index, labelled_index, sup_graph, unsup_graph, task_graph 
 # def visualise_graph(data):
 # 	import matplotlib.pyplot as plt
