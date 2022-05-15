@@ -68,9 +68,9 @@ class Node2NodeSupConLoss(nn.Module):
 # 	def forward(self, unsup_graph_aug1, unsup_graph_aug2):
 		
 	
-class QueryClassificationLoss(nn.Module):
-	def __init__(self):
-		self.CE_fn = nn.CrossEntropyLoss()
+# class QueryClassificationLoss(nn.Module):
+# 	def __init__(self):
+# 		self.CE_fn = nn.CrossEntropyLoss()
 
-	def forward(self, x, y):
-		return self.CE_fn(x, y)
+# 	def forward(self, x, y):
+# 		return self.CE_fn(x, y)

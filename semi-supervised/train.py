@@ -39,7 +39,8 @@ GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 supCL_fn = loss.Node2NodeSupConLoss()
 unsupCL_fn = contraster = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']), mode='L2L', intraview_negs=True).to(device)
 unsup_weight = config['unsup_weight']
-loss_fn = loss.QueryClassificationLoss()
+# loss_fn = loss.QueryClassificationLoss()
+loss_fn = torch.nn.CrossEntropyLoss()
 encoder_optimizer = torch.optim.Adam(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
 decoder_optimizer = torch.optim.Adam(GNN_Decoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
 
