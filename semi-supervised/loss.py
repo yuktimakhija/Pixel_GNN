@@ -5,9 +5,11 @@ import torch.nn as nn
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.distances import CosineSimilarity
 from config import config
-import GCL.augmentors as A
+
 from numpy.random import default_rng
 rng = default_rng()
+
+device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
 class Node2NodeSupConLoss(nn.Module):
 	def check_valid(self, y, sampled):
@@ -28,11 +30,11 @@ class Node2NodeSupConLoss(nn.Module):
 		# 		return False
 		# return True
 
-	def forward(self, sup_graph):
+	def forward(self, x, y):
 		# x = torch.cat([graph['x'] for graph in graphs])
 		# y = torch.cat([graph['y'] for graph in graphs])
-		x = sup_graph['x']
-		y = sup_graph['y']
+		# x = sup_graph.x
+		# y = sup_graph.y
 		# total number of nodes in the batch
 		# n = sum(graph['x'].shape[0] for graph in graphs)
 		n = x.shape[0]
@@ -63,5 +65,8 @@ class Node2NodeSupConLoss(nn.Module):
 		return total_loss
 
 # class Node2NodeUnsupConLoss(nn.Module):
-# 	def forward(self, unsup_graph):
+# 	def forward(self, unsup_graph_aug1, unsup_graph_aug2):
 		
+	
+class QueryClassificationLoss(nn.Module):
+	def 

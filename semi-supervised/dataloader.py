@@ -176,12 +176,12 @@ class GeneralDataLoader(Dataset):
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
 		assert len(unsup_image_list) == self.unsup
 
-		q_graph = img2graph(img, label)
-		sup_graph, unsup_graph, task_graph = support_graph_matrix(support_image_list, support_label_list, unsup_image_list)
+		# q_graph = img2graph(img, label)
+		q_index, sup_index, sup_graph, unsup_graph, task_graph = support_graph_matrix(support_image_list, support_label_list, unsup_image_list)
 		if self.mode == 'train':
-			return q_graph, sup_graph, unsup_graph, task_graph, subcls_list
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph
 		else:
-			return q_graph, sup_graph, unsup_graph, task_graph, subcls_list, label.copy()
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, label.copy()
 
 
 def make_dataset(split, path, data_list, unsup_data_list, training_classes):

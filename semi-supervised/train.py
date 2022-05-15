@@ -7,8 +7,18 @@ import dataloader
 import loss
 import time
 import GCL.augmentors as A
+from GCL.models import DualBranchContrast
+import GCL.losses as L
 from torch_geometric.data import Data
 
+def augment(unsup_graph):
+	aug1, aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
+					A.FeatureMasking(pf=0.1),
+					A.EdgeRemoving(pe=0.1)],
+					num_choices=2)
+	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
+	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
+	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
 
 device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
@@ -23,11 +33,11 @@ if dataset in ['BCV', 'CT_ORG', 'DECATHLON']:
 
 emb_dim = config['embedding_dim']
 num_classes = config['classes'][dataset]
-GNN_Encoder = GNN_Encoder(img_dim, emb_dim)
-GNN_Decoder = GNN_Decoder(emb_dim, num_classes)
+GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
+GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 
 supCL_fn = loss.Node2NodeSupConLoss()
-unsupCL_fn = loss.Node2NodeUnsupConLoss()
+unsupCL_fn = contraster = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']), mode='L2L', intraview_negs=True).to(device)
 unsup_weight = config['unsup_weight']
 loss_fn = loss.QueryClassificationLoss()
 encoder_optimizer = torch.optim.Adam(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
@@ -56,7 +66,7 @@ starttime = time.time()
 for episode in range(n_episodes):
 	print(f'Episode {episode}')
 	
-	for i, (q_graph, sup_graph, unsup_graph, task_graph, subcls_lists) in enumerate(trainloader):
+	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, subcls_lists) in enumerate(trainloader):
 		encoder_optimizer.zero_grad()
 		decoder_optimizer.zero_grad()
 		# all tensors are on device already
@@ -71,7 +81,7 @@ for episode in range(n_episodes):
 		# once embeddings are here, make projection heads from a simple MLP?
 		# ?
 		# call the loss function on task graph augs (query??) and obtain contrastive loss
-		sup_CL, unsup_CL = supCL_fn(sup_embs), unsupCL_fn(unsup_embs1, unsup_embs2)
+		sup_CL, unsup_CL = supCL_fn(sup_embs.x, sup_embs.y), unsupCL_fn(unsup_embs1.x, unsup_embs2.x)
 		contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 		# backprop through optimizer
 		contrastive_loss.backward()
@@ -85,7 +95,7 @@ for episode in range(n_episodes):
 			task_embs = GNN_Encoder(task_graph)
 		task_embs = task_embs.detach()
 		task_embs = GNN_Decoder(task_embs)
-		loss = loss_fn(task_embs)
+		loss = loss_fn(task_embs[sup_index], task_graph[sup_index].y)
 		loss.backward()
 		decoder_optimizer.step()
 		# task ends
@@ -95,11 +105,3 @@ for episode in range(n_episodes):
 		print(f'Classification Loss:{loss.item()}')
 
 
-def augment():
-	aug1, aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
-					A.FeatureMasking(pf=0.1),
-					A.EdgeRemoving(pe=0.1)],
-					num_choices=2)
-	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
-	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
-	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)

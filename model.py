@@ -28,6 +28,9 @@ class GNN_Encoder(torch.nn.Module):
 		x = F.dropout(x, training= self.training)
 		x, (edge_index, edge_attr) = self.layer3(x, edge_index, edge_attr, return_attention_weights = True)
 		return x, (edge_index, edge_attr)
+	
+	# def project(self, data:Data):
+
 
 class GNN_Decoder(torch.nn.Module):
 	def __init__(self, emb_dim, out_dim):
