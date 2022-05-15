@@ -5,6 +5,7 @@ import torch.nn as nn
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.distances import CosineSimilarity
 from config import config
+import GCL.augmentors as A
 from numpy.random import default_rng
 rng = default_rng()
 
@@ -27,20 +28,20 @@ class Node2NodeSupConLoss(nn.Module):
 		# 		return False
 		# return True
 
-	def forward(self, graphs):
-		# graphs is a list of all 2b Data objects in a batch (b support graphs -> 2b augmentations)
-		# we assume it is binary currently (either class A or not class A) 
-		x = torch.cat([graph['x'] for graph in graphs])
-		y = torch.cat([graph['y'] for graph in graphs])
+	def forward(self, sup_graph):
+		# x = torch.cat([graph['x'] for graph in graphs])
+		# y = torch.cat([graph['y'] for graph in graphs])
+		x = sup_graph['x']
+		y = sup_graph['y']
 		# total number of nodes in the batch
-		n = sum(graph['x'].shape[0] for graph in graphs)
+		# n = sum(graph['x'].shape[0] for graph in graphs)
+		n = x.shape[0]
 		self.n = n
 		# pos_loss, neg_loss = 0,0
 		
 		# randomly sample anchors from all graphs
 		selected_anchors = rng.integers(low=0, high=n, size=config['num_anchors'])
 		# do we check_valid here?
-
 
 		total_loss = 0
 		for anchor in selected_anchors:
@@ -61,18 +62,6 @@ class Node2NodeSupConLoss(nn.Module):
 		
 		return total_loss
 
-		# return {
-		# 	"pos_loss": {
-		# 		"losses": pos_loss,
-		# 		"indices": self.pos_pairs,
-		# 		"reduction_type": "pos_pair",
-		# 	},
-		# 	"neg_loss": {
-		# 		"losses": neg_loss,
-		# 		"indices": self.neg_pairs,
-		# 		"reduction_type": "neg_pair",
-		# 	},
-		# }
-
-	# def pairwise_loss(self, option):
-	# 	# option tells whether to take 
+# class Node2NodeUnsupConLoss(nn.Module):
+# 	def forward(self, unsup_graph):
+		

@@ -92,7 +92,7 @@ class GeneralDataLoader(Dataset):
 		if target_pix[0].shape[0] > 0:
 			label[target_pix[0],target_pix[1]] = 1 
 		label[ignore_pix[0],ignore_pix[1]] = 255           
-		# Now label is "masked" with the class_chosen
+		# Now label has been "masked" with the class_chosen
 
 
 		file_class_chosen = self.sub_class_file_list[class_chosen]

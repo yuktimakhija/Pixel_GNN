@@ -1,3 +1,4 @@
+from cProfile import label
 import random
 import numpy as np
 from torch_geometric.data import Data
@@ -173,9 +174,10 @@ def support_graph(support_images, support_labels):
 	# if y is not None:
 	return Data(x=x, y=y, edge_index=edges, edge_attr=edge_weights)	
 
-def support_graph_matrix(labelled_images, labels, unlabelled_images):
+def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images):
 	num_label = len(labels) # N*K
-	M = len(unlabelled_images) 
+	M = len(unlabeled_images) 
+	Q = len(query_images)
 	n = labelled_images[0].shape[0]
 	num_neighbors_inter = 1 #number of neighbours (between graphs)	
 	num_neighbors = 2 # max distance of neighbors
@@ -186,91 +188,164 @@ def support_graph_matrix(labelled_images, labels, unlabelled_images):
 	edges = [[],[]]
 	edgelist = []
 	edge_weights = []
+	edge_func = config['edge_weight_function']
+	if edge_func == 'mean-abs':
+		f = lambda x1,x2: np.mean(np.abs(x1-x2), axis=2)
+	elif edge_func == 'euclidean':
+		f = lambda x1,x2: np.linalg.norm(x1-x2, axis=2)
 	x = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in labelled_images]).to(device)
 	x_unlabelled = torch.cat([torch.tensor(img.reshape(-1,num_node_features),
-		dtype = torch.float) for img in unlabelled_images]).to(device)
+		dtype = torch.float) for img in unlabeled_images]).to(device)
 	y = None
 	y = torch.cat([torch.tensor(label.reshape(-1,1), dtype = torch.float) for label in labels]).to(device) # same
 	num_node_features = 3 if dataset in ['coco'] else 1
 
-	index = np.arange(num_label+M) # order in which images appear in graph
+	index = np.arange(num_label+M+Q) # order in which images appear in graph
 	random.shuffle(index) # for i in index: if i<num_label then labelled else unlabeled 
-	# [2,4,1,5,3,0]
+	# [2,4,1,5,3,0] these values correspond to positions in the final array/combined graph
+	
+	
 	
 	def intra_graph_connections(a, img_num, img_index):
 		indices = np.arange(nn).reshape(a.shape) + img_num*nn
+		lab = np.zeros_like(a)
+		edges = [[],[]]
+		edge_weights = []
 		if img_index<num_label:
-			labeled = True
+			lab = labels[img_index] 
 		for i in range(1,num_neighbors+1):
 			# right
-			edge_weights = np.append(edge_weights, np.abs((a[:, :-i] - a[:, i:]).reshape(-1, num_node_features)))
-			edges[0] = edges[0] = np.append(edges[0], indices[:, :-i].reshape(-1))
-			edges[1] = np.append(edges[1], indices[:, i:].reshape(-1))
+			edge_weights.append(alpha*f(a[:, :-i], a[:, i:]) + beta*np.abs(lab[:, :-i] - lab[:, i:]).reshape(-1))
+			edges[0].append(indices[:, :-i].reshape(-1))
+			edges[1].append(indices[:, i:].reshape(-1))
 			# left
-			edge_weights = np.append(edge_weights, np.abs((a[:, i:] - a[:, :-i]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[:, i:].reshape(-1))
-			edges[1] = np.append(edges[1], indices[:, :-i].reshape(-1))
+			edge_weights.append(alpha*f(a[:, i:], a[:, :-i]) + beta*np.abs(lab[:, i:] - lab[:, :-i]).reshape(-1))
+			edges[0].append(indices[:, i:].reshape(-1))
+			edges[1].append(indices[:, :-i].reshape(-1))
 			# down
-			edge_weights = np.append(edge_weights, np.abs((a[:-i, :] - a[i:, :]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[:-i, :].reshape(-1))
-			edges[1] = np.append(edges[1], indices[i:, :].reshape(-1))
+			edge_weights.append(alpha*f(a[:-i, :], a[i:, :]) + beta*np.abs(lab[:-i, :] - lab[i:, :]).reshape(-1))
+			edges[0].append(indices[:-i, :].reshape(-1))
+			edges[1].append(indices[i:, :].reshape(-1))
 			# up
-			edge_weights = np.append(edge_weights, np.abs((a[i:, :] - a[:-i, :]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[i:, :].reshape(-1))
-			edges[1] = np.append(edges[1], indices[:-i, :].reshape(-1))
+			edge_weights.append(alpha*f(a[i:, :], a[:-i, :]) + beta*np.abs(lab[i:, :] - lab[:-i, :]).reshape(-1))
+			edges[0].append(indices[i:, :].reshape(-1))
+			edges[1].append(indices[:-i, :].reshape(-1))
 			# top right (diagonally)
-			edge_weights = np.append(edge_weights, np.abs((a[i:, :-i] - a[:-i, i:]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[i:, :-i].reshape(-1))
-			edges[1] = np.append(edges[1], indices[:-i, i:].reshape(-1))
+			edge_weights.append(alpha*f(a[i:, :-i], a[:-i, i:]) + beta*np.abs(lab[i:, :-i] - lab[:-i, i:]).reshape(-1))
+			edges[0].append(indices[i:, :-i].reshape(-1))
+			edges[1].append(indices[:-i, i:].reshape(-1))
 			# bottom left (diagonally)
-			edge_weights = np.append(edge_weights, np.abs((a[i:, :-i] - a[:-i, i:]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[:-i, i:].reshape(-1))
-			edges[1] = np.append(edges[1], indices[i:, :-i].reshape(-1))
+			edge_weights.append(alpha*f(a[i:, :-i], a[:-i, i:]) + beta*np.abs(lab[i:, :-i] - lab[:-i, i:]).reshape(-1))
+			edges[0].append(indices[:-i, i:].reshape(-1))
+			edges[1].append(indices[i:, :-i].reshape(-1))
 			# top left (diagonally)
-			edge_weights = np.append(edge_weights, np.abs((a[i:, i:] - a[:-i, :-i]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[i:, i:].reshape(-1))
-			edges[1] = np.append(edges[1], indices[:-i, :-i].reshape(-1))
+			edge_weights.append(alpha*f(a[i:, i:], a[:-i, :-i]) + beta*np.abs(lab[i:, i:] - lab[:-i, :-i]).reshape(-1))
+			edges[0].append(indices[i:, i:].reshape(-1))
+			edges[1].append(indices[:-i, :-i].reshape(-1))
 			# bottom right (diagonally)
-			edge_weights = np.append(edge_weights, np.abs((a[i:, i:] - a[:-i, :-i]).reshape(-1, num_node_features)))
-			edges[0] = np.append(edges[0], indices[:-i, :-i].reshape(-1))
-			edges[1] = np.append(edges[1], indices[i:, i:].reshape(-1))
+			edge_weights.append(alpha*f(a[i:, i:], a[:-i, :-i]) + beta*np.abs(lab[i:, i:] - lab[:-i, :-i]).reshape(-1))
+			edges[0].append(indices[:-i, :-i].reshape(-1))
+			edges[1].append(indices[i:, i:].reshape(-1))
 		
 		# remaining connections 
 		# 2 up and 1 right
-		edge_weights = np.append(edge_weights, np.abs((a[2:, :-1] - a[:-2, 1:]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[2:, :-1].reshape(-1))
-		edges[1] = np.append(edges[1], indices[:-2, 1:].reshape(-1))
+		edge_weights.append(alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*np.abs(lab[2:, :-1] - label[:-2, 1:]).reshape(-1))
+		edges[0].append(indices[2:, :-1].reshape(-1))
+		edges[1].append(indices[:-2, 1:].reshape(-1))
 		# 2 down and 1 left
-		edge_weights = np.append(edge_weights, np.abs((a[2:, :-1] - a[:-2, 1:]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[:-2, 1:].reshape(-1))
-		edges[1] = np.append(edges[1], indices[2:, :-1].reshape(-1))
+		edge_weights.append(alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*np.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1))
+		edges[0].append(indices[:-2, 1:].reshape(-1))
+		edges[1].append(indices[2:, :-1].reshape(-1))
 		# 2 up and 1 left
-		edge_weights = np.append(edge_weights, np.abs((a[2:, 1:] - a[:-2, :-1]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[2:, 1:].reshape(-1))
-		edges[1] = np.append(edges[1], indices[:-2, :-1].reshape(-1))
+		edge_weights.append(alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*np.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1))
+		edges[0].append(indices[2:, 1:].reshape(-1))
+		edges[1].append(indices[:-2, :-1].reshape(-1))
 		# 2 down and 1 right
-		edge_weights = np.append(edge_weights, np.abs((a[2:, 1:] - a[:-2, :-1]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[:-2, :-1].reshape(-1))
-		edges[1] = np.append(edges[1], indices[2:, 1:].reshape(-1))
+		edge_weights.append(alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*np.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1))
+		edges[0].append(indices[:-2, :-1].reshape(-1))
+		edges[1].append(indices[2:, 1:].reshape(-1))
 		# 1 up and 2 right
-		edge_weights = np.append(edge_weights, np.abs((a[1:, :-2] - a[:-1, 2:]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[1:, :-2].reshape(-1))
-		edges[1] = np.append(edges[1], indices[:-1, 2:].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*np.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1))
+		edges[0].append(indices[1:, :-2].reshape(-1))
+		edges[1].append(indices[:-1, 2:].reshape(-1))
 		# 1 down and 2 left
-		edge_weights = np.append(edge_weights, np.abs((a[1:, :-2] - a[:-1, 2:]).reshape(-1, num_node_features)))
-		edges[1] = np.append(edges[1], indices[1:, :-2].reshape(-1))
-		edges[0] = np.append(edges[0], indices[:-1, 2:].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*np.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1))
+		edges[1].append(indices[1:, :-2].reshape(-1))
+		edges[0].append(indices[:-1, 2:].reshape(-1))
 		# 1 up and 2 left
-		edge_weights = np.append(edge_weights, np.abs((a[1:, 2:] - a[:-1, :-2]).reshape(-1, num_node_features)))
-		edges[0] = np.append(edges[0], indices[1:, 2:].reshape(-1))
-		edges[1] = np.append(edges[1], indices[:-1, :-2].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*np.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1))
+		edges[0].append(indices[1:, 2:].reshape(-1))
+		edges[1].append(indices[:-1, :-2].reshape(-1))
 		# 1 down and 2 right	
-		edge_weights = np.append(edge_weights, np.abs((a[1:, 2:] - a[:-1, :-2]).reshape(-1, num_node_features)))
-		edges[1] = np.append(edges[1], indices[1:, 2:].reshape(-1))
-		edges[0] = np.append(edges[0], indices[:-1, :-2].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*np.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1))
+		edges[1].append(indices[1:, 2:].reshape(-1))
+		edges[0].append(indices[:-1, :-2].reshape(-1))
+
+		return edge_weights,edges
 	
-	def inter_graph():
-		
+	def inter_graph_connections(a, b, img_num, img_index, prev_img_index):
+		indices = np.arange(nn).reshape(a.shape) + img_num*nn
+		lab = np.zeros_like(a)
+		edges = [[],[]]
+		edge_weights = []
+		if img_index<num_label and prev_img_index<num_label:
+			lab = labels[img_index] 
+			prev_img_lab = labels[prev_img_index]
+		# directly above and directly below
+		edge_weights.append(alpha*f(a - b) + beta*np.abs(lab - prev_img_lab).reshape(-1))
+		edges[0].append(indices)
+		edges[1].append(indices-nn)
+		edge_weights.append(alpha*f(a - b) + beta*np.abs(lab - prev_img_lab).reshape(-1))
+		edges[1].append(indices)
+		edges[0].append(indices-nn)
+		# top-right and bottom-left
+		edge_weights.append(alpha*f(a[:, :-1], b[:, 1:]) + beta*np.abs(lab[:, :-1] - prev_img_lab[:, 1:]).reshape(-1))
+		edges[0].append(indices[:, :-1].reshape(-1))
+		edges[1].append((indices-nn)[:, 1:].reshape(-1))
+		edge_weights.append(alpha*f(a[:, :-1], b[:, 1:]) + beta*np.abs(lab[:, :-1] - prev_img_lab[:, 1:]).reshape(-1))
+		edges[1].append(indices[:, :-1].reshape(-1))
+		edges[0].append((indices-nn)[:, 1:].reshape(-1))
+
+		return edge_weights,edges
+
+	edges_labelled = [[],[]]
+	edge_weights_labelled = []	
+	edges_unlabeled = [[],[]]
+	edge_weights_unlabeled = []
+	edges_combined = [[],[]]
+	edge_weights_combined = []
+	labelled_num, unlabeled_num = 0,0
+	prev_lab_index, prev_unlab_index = 0,0
+	for i in range(len(index)):
+		if index[i]<num_label: #labeled 
+			ew,e = intra_graph_connections(labelled_images[index[i]],i,index[i])
+			edge_weights_combined.append(ew)
+			edge_weights_labelled.append(ew)
+			edges_combined[0].append(e[0])
+			edges_combined[1].append(e[1])
+			if (i - labelled_num >0):
+				edges_labelled[0].append(e[0]-(i - labelled_num)*nn)
+				edges_labelled[1].append(e[1]-(i - labelled_num)*nn)
+			if labelled_num != 0:
+				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
+			labelled_num += 1
+			prev_lab_index = index[i]
+		elif index[i]< (M+num_label) : #unlabeled
+			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
+			edge_weights_combined.append(ew)
+			edge_weights_unlabeled.append(ew)
+			edges_combined[0].append(e[0])
+			edges_combined[1].append(e[1])
+			if (i - unlabeled_num >0):
+				edges_unlabeled[0].append(e[0]-(i - unlabeled_num)*nn)
+				edges_unlabeled[1].append(e[1]-(i - unlabeled_num)*nn)
+			unlabeled_num += 1
+			prev_unlab_index = index[i]
+		else: #query
+			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label-M],i,index[i])
+			edge_weights_combined.append(ew)
+			edges_combined[0].append(e[0])
+			edges_combined[1].append(e[1])
 
 # def visualise_graph(data):
 # 	import matplotlib.pyplot as plt

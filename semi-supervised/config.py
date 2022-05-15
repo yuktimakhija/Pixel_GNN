@@ -1,4 +1,6 @@
 config = {
+	"run": 1, # DO NOT CHANGE, updated automatically 
+
 	# Parameters to change during runs
 	"dataset": "BCV", # COCO, BCV, CT_ORG, DECATHLON
 	"split": 0, # 0-3 for coco
@@ -7,6 +9,8 @@ config = {
 
 	"mode": "train", # or test/val
 	"shot": 3,
+	"ways": 1,
+	"n_queries": 1,
 	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
@@ -15,7 +19,7 @@ config = {
 	"num_neighbors": 2,
 	"alpha": 1,
 	"beta": 1,
-
+	"edge_weight_function": 'mean-abs', # mean-abs or euclidean or deltaE
 	"embedding_dim": 32,
 
 	# CL variables

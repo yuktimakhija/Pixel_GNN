@@ -12,11 +12,11 @@ from torch_geometric.nn import GATv2Conv
 
 
 class GNN_Encoder(torch.nn.Module):
-	def __init__(self, img_in_dim, emb_dep):
+	def __init__(self, img_in_dim, emb_dim):
 		super().__init__()
 		self.layer1 = GATv2Conv(img_in_dim, 8) # img_dim is 3 [R,G,B]
 		self.layer2 = GATv2Conv(8, 16)
-		self.layer3 = GATv2Conv(16, emb_dep)
+		self.layer3 = GATv2Conv(16, emb_dim)
 
 	def forward(self, data:Data):
 		x, edge_index, edge_attr = data.x, data.edge_index, data.edge_attr
@@ -30,9 +30,9 @@ class GNN_Encoder(torch.nn.Module):
 		return x, (edge_index, edge_attr)
 
 class GNN_Decoder(torch.nn.Module):
-	def __init__(self, out_dim):
+	def __init__(self, emb_dim, out_dim):
 		super().__init__()
-		self.layer1 = GATv2Conv(32, 16) # img_dim is 3 [R,G,B]
+		self.layer1 = GATv2Conv(emb_dim, 16) # img_dim is 3 [R,G,B]
 		self.layer2 = GATv2Conv(16, out_dim)
 
 	def forward(self, data:Data):
