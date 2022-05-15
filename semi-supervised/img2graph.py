@@ -304,21 +304,62 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 		edge_weights.append(alpha*f(a - b) + beta*np.abs(lab - prev_img_lab).reshape(-1))
 		edges[1].append(indices)
 		edges[0].append(indices-nn)
-		# top-down and bottom-up
+		# top-right and bottom-left
 		edge_weights.append(alpha*f(a[:, :-1], b[:, 1:]) + beta*np.abs(lab[:, :-1] - prev_img_lab[:, 1:]).reshape(-1))
 		edges[0].append(indices[:, :-1].reshape(-1))
 		edges[1].append((indices-nn)[:, 1:].reshape(-1))
 		edge_weights.append(alpha*f(a[:, :-1], b[:, 1:]) + beta*np.abs(lab[:, :-1] - prev_img_lab[:, 1:]).reshape(-1))
 		edges[1].append(indices[:, :-1].reshape(-1))
 		edges[0].append((indices-nn)[:, 1:].reshape(-1))
+		# top-left and bottom right
+		edge_weights.append(alpha*f(a[:, 1:], b[:, :-1]) + beta*np.abs(lab[:, 1:] - prev_img_lab[:, :-1]).reshape(-1))
+		edges[0].append(indices[:, 1:].reshape(-1))
+		edges[1].append((indices-nn)[:, :-1].reshape(-1))
+		edge_weights.append(alpha*f(a[:, 1:], b[:, :-1]) + beta*np.abs(lab[:, 1:] - prev_img_lab[:, :-1]).reshape(-1))
+		edges[1].append(indices[:, 1:].reshape(-1))
+		edges[0].append((indices-nn)[:, :-1].reshape(-1))
 		# top-up and bottom down
-		edge_weights.append(alpha*f(a[:, 1:], b[:, :-1]) + beta*np.abs(lab[:, 1:] - prev_img_lab[:, :-1]).reshape(-1))
-		edges[0].append(indices[:, :-1].reshape(-1))
-		edges[1].append((indices-nn)[:, 1:].reshape(-1))
-		edge_weights.append(alpha*f(a[:, 1:], b[:, :-1]) + beta*np.abs(lab[:, 1:] - prev_img_lab[:, :-1]).reshape(-1))
-		edges[1].append(indices[:, :-1].reshape(-1))
-		edges[0].append((indices-nn)[:, 1:].reshape(-1))
-		
+		edge_weights.append(alpha*f(a[1:, :], b[:-1, :]) + beta*np.abs(lab[1:, :] - prev_img_lab[:-1, :]).reshape(-1))
+		edges[0].append(indices[1:, :].reshape(-1))
+		edges[1].append((indices-nn)[:-1, :].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, :], b[:-1, :]) + beta*np.abs(lab[1:, :] - prev_img_lab[:-1, :]).reshape(-1))
+		edges[1].append(indices[1:, :].reshape(-1))
+		edges[0].append((indices-nn)[:-1, :].reshape(-1))
+		# top down and bottom up
+		edge_weights.append(alpha*f(a[:-1, :], b[1:, :]) + beta*np.abs(lab[:-1, :] - prev_img_lab[1:, :]).reshape(-1))
+		edges[0].append(indices[:-1, :].reshape(-1))
+		edges[1].append((indices-nn)[1:, :].reshape(-1))
+		edge_weights.append(alpha*f(a[:-1, :], b[1:, :]) + beta*np.abs(lab[:-1, :] - prev_img_lab[1:, :]).reshape(-1))
+		edges[0].append(indices[:-1, :].reshape(-1))
+		edges[1].append((indices-nn)[1:, :].reshape(-1))
+		# top: down right and down: up left
+		edge_weights.append(alpha*f(a[:-1, :-1], b[1:, 1:]) + beta*np.abs(lab[:-1, :-1] - prev_img_lab[1:, 1:]).reshape(-1))
+		edges[0].append(indices[:-1, :-1].reshape(-1))
+		edges[1].append((indices-nn)[1:, 1:].reshape(-1))
+		edge_weights.append(alpha*f(a[:-1, :-1], b[1:, 1:]) + beta*np.abs(lab[:-1, :-1] - prev_img_lab[1:, 1:]).reshape(-1))
+		edges[1].append(indices[:-1, :-1].reshape(-1))
+		edges[0].append((indices-nn)[1:, 1:].reshape(-1))
+		# top: up right and down: bottom left
+		edge_weights.append(alpha*f(a[1:, :-1], b[:-1, 1:]) + beta*np.abs(lab[1:, :-1] - prev_img_lab[:-1, 1:]).reshape(-1))
+		edges[0].append(indices[1:, :-1].reshape(-1))
+		edges[1].append((indices-nn)[:-1, 1:].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, :-1], b[:-1, 1:]) + beta*np.abs(lab[1:, :-1] - prev_img_lab[:-1, 1:]).reshape(-1))
+		edges[1].append(indices[1:, :-1].reshape(-1))
+		edges[0].append((indices-nn)[:-1, 1:].reshape(-1))
+		# top: up left and bottom: down right
+		edge_weights.append(alpha*f(a[1:, 1:], b[:-1, :-1]) + beta*np.abs(lab[1:, 1:] - prev_img_lab[:-1, :-1]).reshape(-1))
+		edges[0].append(indices[1:, 1:].reshape(-1))
+		edges[1].append((indices-nn)[:-1, :-1].reshape(-1))
+		edge_weights.append(alpha*f(a[1:, 1:], b[:-1, :-1]) + beta*np.abs(lab[1:, 1:] - prev_img_lab[:-1, :-1]).reshape(-1))
+		edges[1].append(indices[1:, 1:].reshape(-1))
+		edges[0].append((indices-nn)[:-1, :-1].reshape(-1))
+		# top: down left and bottom: up right
+		edge_weights.append(alpha*f(a[:-1, 1:], b[1:, :-1]) + beta*np.abs(lab[:-1, 1:] - prev_img_lab[1:, :-1]).reshape(-1))
+		edges[0].append(indices[:-1, 1:].reshape(-1))
+		edges[1].append((indices-nn)[1:, :-1].reshape(-1))
+		edge_weights.append(alpha*f(a[:-1, 1:], b[1:, :-1]) + beta*np.abs(lab[:-1, 1:] - prev_img_lab[1:, :-1]).reshape(-1))
+		edges[1].append(indices[:-1, 1:].reshape(-1))
+		edges[0].append((indices-nn)[1:, :-1].reshape(-1))
 		return edge_weights,edges
 
 	edges_labelled = [[],[]]
@@ -347,12 +388,25 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edges_labelled[0].append(e[0]-(i - labelled_num)*nn)
 				edges_labelled[1].append(e[1]-(i - labelled_num)*nn)
 			if labelled_num != 0:
-				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
+				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],labelled_num,index[i],prev_lab_index)
+				edge_weights_labelled.append(ew)
+				edges_labelled[0].append(e[0])
+				edges_labelled[0].append(e[1])
+			if i!=0:
+				if i-1 < num_label:
+					ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
+				elif i-1 < num_label +M:
+					ew,e = inter_graph_connections(labelled_images[index[i]],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
+				else:
+					ew,e = inter_graph_connections(labelled_images[index[i]],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
+				edge_weights_combined.append(ew)
+				edges_combined[0].append(e[0])
+				edges_combined[1].append(e[1])
 			labelled_num += 1
 			prev_lab_index = index[i]
 		elif index[i]< (M+num_label) : #unlabeled
-			x_unlabeled = torch.cat(torch.tensor(unlabeled_images[index[i]].reshape(-1,num_node_features), dtype = torch.float)).to(device)
-			x_task = torch.cat(torch.tensor(unlabeled_images[index[i]].reshape(-1,num_node_features), dtype = torch.float)).to(device)
+			x_unlabeled = torch.cat(torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float)).to(device)
+			x_task = torch.cat(torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float)).to(device)
 			y_task = torch.cat(torch.tensor(-torch.ones_like(x_task.reshape(-1))))
 			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
 			edge_weights_combined.append(ew)
@@ -362,14 +416,39 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			if (i - unlabeled_num >0):
 				edges_unlabeled[0].append(e[0]-(i - unlabeled_num)*nn)
 				edges_unlabeled[1].append(e[1]-(i - unlabeled_num)*nn)
+			if unlabeled_num != 0:
+				ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],unlabeled_num,index[i],prev_unlab_index)
+				edge_weights_unlabeled.append(ew)
+				edges_unlabeled[0].append(e[0])
+				edges_unlabeled[0].append(e[1])
+			if i!=0:
+				if i-1 < num_label:
+					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
+				elif i-1 < num_label +M:
+					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
+				else:
+					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],query_images[index[index[query_index[-1]]-num_label-M]-num_label-M],i,index[i],index[query_index[-1]])
+				edge_weights_combined.append(ew)
+				edges_combined[0].append(e[0])
+				edges_combined[1].append(e[1])
 			unlabeled_num += 1
 			prev_unlab_index = index[i]
 		else: #query
 			query_index.append(i)
-			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label-M],i,index[i])
+			ew,e = intra_graph_connections(query_images[index[i]-num_label-M],i,index[i])
 			edge_weights_combined.append(ew)
 			edges_combined[0].append(e[0])
 			edges_combined[1].append(e[1])
+			if i!=0:
+				if i-1 < num_label:
+					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
+				elif i-1 < num_label +M:
+					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
+				else:
+					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
+				edge_weights_combined.append(ew)
+				edges_combined[0].append(e[0])
+				edges_combined[1].append(e[1])
 
 	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled)	
 	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled)	

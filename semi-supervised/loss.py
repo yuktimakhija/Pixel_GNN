@@ -69,4 +69,8 @@ class Node2NodeSupConLoss(nn.Module):
 		
 	
 class QueryClassificationLoss(nn.Module):
-	def 
+	def __init__(self):
+		self.CE_fn = nn.CrossEntropyLoss()
+
+	def forward(self, x, y):
+		return self.CE_fn(x, y)

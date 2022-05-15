@@ -63,10 +63,10 @@ print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}'
 starttime = time.time()
 
 # iterate over dataloader and get a batch
-for episode in range(n_episodes):
+for episode in tqdm(range(n_episodes)):
 	print(f'Episode {episode}')
-	
-	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, subcls_lists) in enumerate(trainloader):
+	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
+	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, subcls_lists) in tqdm(enumerate(trainloader), leave=False):
 		encoder_optimizer.zero_grad()
 		decoder_optimizer.zero_grad()
 		# all tensors are on device already
@@ -83,25 +83,30 @@ for episode in range(n_episodes):
 		# call the loss function on task graph augs (query??) and obtain contrastive loss
 		sup_CL, unsup_CL = supCL_fn(sup_embs.x, sup_embs.y), unsupCL_fn(unsup_embs1.x, unsup_embs2.x)
 		contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
+		episode_losses[0] += contrastive_loss.item()
+		episode_losses[1] += sup_CL.item()
+		episode_losses[2] += unsup_CL.item()
 		# backprop through optimizer
 		contrastive_loss.backward()
 		encoder_optimizer.step()
 		# phase 2: node classification
 		# GNN_Encoder.no_grad()
 		# get embeddings for task graphs and query graphs (all batches/parallel)
-		# append one-hot label to all node's embeddings in task graph and
-		# [1/k,1/k,....,1/k] (uniform distribution/k-simplex) to query graph
 		with torch.no_grad():
 			task_embs = GNN_Encoder(task_graph)
 		task_embs = task_embs.detach()
 		task_embs = GNN_Decoder(task_embs)
-		loss = loss_fn(task_embs[sup_index], task_graph[sup_index].y)
+		sup_index += q_index
+		loss = loss_fn(task_embs[sup_index].x, task_graph[sup_index].y)
+		episode_losses[3] += loss.item()
 		loss.backward()
 		decoder_optimizer.step()
+		q_loss = loss_fn(task_embs[q_index].x, task_graph[q_index].y)
+		episode_losses[4] += q_loss.item()
 		# task ends
 
 	if i%10 == 0:
-		print(f'Episode {i} complete, CL:{contrastive_loss.item()}\t(S:{sup_CL.item()},\tU:{unsup_CL.item()})')
-		print(f'Classification Loss:{loss.item()}')
+		torch.save(GNN_Encoder.state_dict(), f'{dataset}_enc_{i/n_episodes}%')
 
-
+	tqdm.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
+	tqdm.write(f'Classification Loss:{episode_losses[3]}, \tQuery Loss:{episode_losses[4]}')
