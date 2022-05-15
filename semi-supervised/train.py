@@ -72,7 +72,7 @@ json.dump(run_dict, open('runs.json', 'w'), indent=4)
 for episode in tqdm(range(n_episodes)):
 	print(f'Episode {episode}')
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
-	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, subcls_lists) in tqdm(enumerate(trainloader), leave=False):
+	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), leave=False):
 		encoder_optimizer.zero_grad()
 		decoder_optimizer.zero_grad()
 		# all tensors are on device already
@@ -102,12 +102,12 @@ for episode in tqdm(range(n_episodes)):
 			task_embs = GNN_Encoder(task_graph)
 		task_embs = task_embs.detach()
 		task_embs = GNN_Decoder(task_embs)
-		sup_index += q_index
-		loss = loss_fn(task_embs[sup_index].x, task_graph[sup_index].y)
+		# sup_index += q_index
+		loss = loss_fn(task_embs[sup_index + q_index].x, torch.cat((task_graph[sup_index].y, q_label)))
 		episode_losses[3] += loss.item()
 		loss.backward()
 		decoder_optimizer.step()
-		q_loss = loss_fn(task_embs[q_index].x, task_graph[q_index].y)
+		q_loss = loss_fn(task_embs[q_index].x, q_label)
 		episode_losses[4] += q_loss.item()
 		# task ends
 
