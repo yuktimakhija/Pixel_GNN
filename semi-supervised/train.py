@@ -10,6 +10,7 @@ import GCL.augmentors as A
 from GCL.models import DualBranchContrast
 import GCL.losses as L
 from torch_geometric.data import Data
+import json
 
 def augment(unsup_graph):
 	aug1, aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
@@ -58,12 +59,14 @@ if dataset_type == 'general':
 
 GNN_Encoder.train()
 GNN_Decoder.train()
-run = config['run'] + 1
-config['run'] = run # updating run number
+run_dict = json.load(open('runs.json'))
+run = max(run_dict.keys()) + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 starttime = time.time()
 
 dirname = f"./weights/{dataset}/{config['ways']}way_{config['shots']}shot/{run}/"
+run_dict[run] = dirname # updating run number
+json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 # iterate over dataloader and get a batch
 for episode in tqdm(range(n_episodes)):
