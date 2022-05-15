@@ -2,13 +2,13 @@ config = {
 	"run": 1, # DO NOT CHANGE, updated automatically 
 
 	# Parameters to change during runs
-	"dataset": "BCV", # COCO, BCV, CT_ORG, DECATHLON
+	"dataset": "COCO", # COCO, BCV, CT_ORG, DECATHLON
 	"split": 0, # 0-3 for coco
 	"test_dataset": "",
 	"lists_path": "../lists/",
 
 	"mode": "train", # or test/val
-	"shot": 3,
+	"shot": 1,
 	"ways": 1,
 	"n_queries": 1,
 	"unlabelled": 6,

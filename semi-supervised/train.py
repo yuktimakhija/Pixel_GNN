@@ -62,6 +62,8 @@ config['run'] = run # updating run number
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 starttime = time.time()
 
+dirname = f"./weights/{dataset}/{config['ways']}way_{config['shots']}shot/{run}/"
+
 # iterate over dataloader and get a batch
 for episode in tqdm(range(n_episodes)):
 	print(f'Episode {episode}')
@@ -105,8 +107,16 @@ for episode in tqdm(range(n_episodes)):
 		episode_losses[4] += q_loss.item()
 		# task ends
 
-	if i%10 == 0:
-		torch.save(GNN_Encoder.state_dict(), f'{dataset}_enc_{i/n_episodes}%')
+	if i%20 == 0:
+		torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{config["split"]}_{i/n_episodes}%.pt')
+		torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{config["split"]}_{i/n_episodes}%.pt')
 
 	tqdm.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
 	tqdm.write(f'Classification Loss:{episode_losses[3]}, \tQuery Loss:{episode_losses[4]}')
+
+print(f'PixelGNN training on {dataset} finished. Run {run} ended at {time.strftime("%H:%M:%S")}')
+endtime = time.time()
+h = (endtime-starttime)//3600
+m = (endtime-starttime)//60 - h*60
+s = (endtime-starttime)%60
+print(f"Run took {h} hrs, {m} mins, {s} seconds.")

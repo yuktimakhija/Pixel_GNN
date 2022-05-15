@@ -393,9 +393,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edges_labelled[0].append(e[0])
 				edges_labelled[0].append(e[1])
 			if i!=0:
-				if i-1 < num_label:
+				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
-				elif i-1 < num_label +M:
+				elif index[i-1] < num_label +M:
 					ew,e = inter_graph_connections(labelled_images[index[i]],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(labelled_images[index[i]],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
@@ -422,9 +422,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edges_unlabeled[0].append(e[0])
 				edges_unlabeled[0].append(e[1])
 			if i!=0:
-				if i-1 < num_label:
+				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
-				elif i-1 < num_label +M:
+				elif index[i-1] < num_label +M:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],query_images[index[index[query_index[-1]]-num_label-M]-num_label-M],i,index[i],index[query_index[-1]])
@@ -440,9 +440,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			edges_combined[0].append(e[0])
 			edges_combined[1].append(e[1])
 			if i!=0:
-				if i-1 < num_label:
+				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
-				elif i-1 < num_label +M:
+				elif index[i-1] < num_label +M:
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
