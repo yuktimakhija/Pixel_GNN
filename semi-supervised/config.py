@@ -8,7 +8,7 @@ config = {
 	"lists_path": "../lists/",
 
 	"mode": "train", # or test/val
-	"shot": 1,
+	"shots": 1,
 	"ways": 1,
 	"n_queries": 1,
 	"unlabelled": 6,
