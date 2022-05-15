@@ -190,7 +190,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	edge_weights = []
 	edge_func = config['edge_weight_function']
 	if edge_func == 'mean-abs':
-		f = lambda x1,x2: torch.mean(torch.abs(x1-x2), axis=2)
+		f = lambda x1,x2: torch.mean(torch.abs(x1-x2), axis=2).reshape(-1)
 	elif edge_func == 'euclidean':
 		f = lambda x1,x2: torch.linalg.norm(x1-x2, axis=2)
 	# x_labelled = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in labelled_images]).to(device)
