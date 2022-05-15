@@ -197,7 +197,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	# x_unlabeled = torch.cat([torch.tensor(img.reshape(-1,num_node_features),
 	# 	dtype = torch.float) for img in unlabeled_images]).to(device)
 	x_labelled = torch.tensor([])
-	x_unlabelled = torch.tensor([])
+	x_unlabeled = torch.tensor([])
 	x_task = torch.tensor([])
 	# y_unlabeled = None
 	# y_labeled = torch.cat([torch.tensor(label.reshape(-1,1), dtype = torch.float) for label in labels]).to(device) # same
