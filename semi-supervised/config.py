@@ -1,5 +1,4 @@
 config = {
-	"run": 1, # DO NOT CHANGE, updated automatically 
 
 	# Parameters to change during runs
 	"dataset": "COCO", # COCO, BCV, CT_ORG, DECATHLON
@@ -36,7 +35,7 @@ config = {
 	"decathlon_path": "",
 
 	# General Dataset paths
-	"coco_path": "",
+	"coco_path": "../../MSCOCO/",
 	# "bcv_path": "",
 
 	# optimizer params
