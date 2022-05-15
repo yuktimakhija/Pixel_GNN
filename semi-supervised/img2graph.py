@@ -190,9 +190,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	edge_weights = []
 	edge_func = config['edge_weight_function']
 	if edge_func == 'mean-abs':
-		f = lambda x1,x2: np.mean(np.abs(x1-x2), axis=2)
+		f = lambda x1,x2: torch.mean(torch.abs(x1-x2), axis=2)
 	elif edge_func == 'euclidean':
-		f = lambda x1,x2: np.linalg.norm(x1-x2, axis=2)
+		f = lambda x1,x2: torch.linalg.norm(x1-x2, axis=2)
 	# x_labelled = torch.cat([torch.tensor(img.reshape(-1,num_node_features), dtype = torch.float) for img in labelled_images]).to(device)
 	# x_unlabeled = torch.cat([torch.tensor(img.reshape(-1,num_node_features),
 	# 	dtype = torch.float) for img in unlabeled_images]).to(device)
@@ -375,10 +375,10 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	for i in range(len(index)):
 		if index[i]<num_label: #labeled 
 			labelled_index.append(i)
-			x_labelled = torch.cat((x_labelled, torch.tensor(labelled_images[index[i]].reshape(-1,num_node_features), dtype = torch.float)))
-			x_task = torch.cat((x_task, torch.tensor(labelled_images[index[i]].reshape(-1,num_node_features), dtype = torch.float)))
-			y_labelled = torch.cat((y_labelled, torch.tensor(labels[index[i]].reshape(-1))))
-			y_task = torch.cat((y_task, torch.tensor(labels[index[i]].reshape(-1))))
+			x_labelled = torch.cat((x_labelled, labelled_images[index[i]].reshape(-1,num_node_features).clone().detach()))
+			x_task = torch.cat((x_task, labelled_images[index[i]].reshape(-1,num_node_features).clone().detach()))
+			y_labelled = torch.cat((y_labelled, labels[index[i]].reshape(-1).clone().detach()))
+			y_task = torch.cat((y_task, labels[index[i]].reshape(-1).clone().detach()))
 			ew,e = intra_graph_connections(labelled_images[index[i]],i,index[i])
 			edge_weights_combined.append(ew)
 			edge_weights_labelled.append(ew)
@@ -405,9 +405,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			labelled_num += 1
 			prev_lab_index = index[i]
 		elif index[i]< (M+num_label) : #unlabeled
-			x_unlabeled = torch.cat((x_unlabeled, torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float)))
-			x_task = torch.cat((x_task, torch.tensor(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features), dtype = torch.float)))
-			y_task = torch.cat((y_task, torch.tensor(-torch.ones(unlabeled_images[index[i]-num_label].reshape(-1).shape))))
+			x_unlabeled = torch.cat((x_unlabeled, unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).clone().detach()))
+			x_task = torch.cat((x_task, unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).clone().detach()))
+			y_task = torch.cat((y_task, -torch.ones(unlabeled_images[index[i]-num_label].reshape(-1).shape)))
 			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
 			edge_weights_combined.append(ew)
 			edge_weights_unlabeled.append(ew)
@@ -434,8 +434,8 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			unlabeled_num += 1
 			prev_unlab_index = index[i]
 		else: #query
-			x_task = torch.cat((x_task, torch.tensor(query_images[index[i]-num_label-M].reshape(-1,num_node_features), dtype = torch.float)))
-			y_task = torch.cat((y_task, torch.tensor(-torch.ones(query_images[index[i]-num_label-M].reshape(-1).shape))))
+			x_task = torch.cat((x_task, query_images[index[i]-num_label-M].reshape(-1,num_node_features).clone().detach()))
+			y_task = torch.cat((y_task, -torch.ones(query_images[index[i]-num_label-M].reshape(-1).shape)))
 			query_index.append(i)
 			ew,e = intra_graph_connections(query_images[index[i]-num_label-M],i,index[i])
 			edge_weights_combined.append(ew)
