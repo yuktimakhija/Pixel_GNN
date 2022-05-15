@@ -174,7 +174,7 @@ class GeneralDataLoader(Dataset):
 		# Now we should have all support images 
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
 		assert len(unsup_image_list) == self.unsup
-
+		return support_image_list, support_label_list, unsup_image_list, [img]
 		# q_graph = img2graph(img, label)
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [img])
