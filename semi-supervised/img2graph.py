@@ -1,4 +1,3 @@
-from cProfile import label
 import random
 import numpy as np
 from torch_geometric.data import Data
@@ -255,7 +254,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 		
 		# remaining connections 
 		# 2 up and 1 right
-		edge_weights.append(alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - label[:-2, 1:]).reshape(-1))
+		edge_weights.append(alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1))
 		edges[0].append(indices[2:, :-1].reshape(-1))
 		edges[1].append(indices[:-2, 1:].reshape(-1))
 		# 2 down and 1 left
