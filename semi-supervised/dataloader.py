@@ -9,6 +9,7 @@ from tqdm import tqdm
 import random
 from img2graph import img2graph, support_graph_matrix
 from config import config
+from torchvision import transforms
 
 # config = json.load("../config.json")
 
@@ -57,6 +58,9 @@ class GeneralDataLoader(Dataset):
 
 	def __getitem__(self, idx):
 		# adapted from cyctr
+		q = transforms.Compose([transforms.ToTensor(), transforms.Resize((256,256))])
+		p = lambda x: p(x).permute(1,2,0)
+
 		imgpath, lblpath = self.sup_data_list[idx]
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
 		img = np.float32(img)
@@ -159,8 +163,8 @@ class GeneralDataLoader(Dataset):
 			if support_image.shape[0] != support_label.shape[0] or support_image.shape[1] != support_label.shape[1]:
 				raise (RuntimeError("Support Image & label shape mismatch: " + support_image_path + " " + support_label_path + "\n"))     
 
-			support_image_list.append(support_image)
-			support_label_list.append(support_label)
+			support_image_list.append(p(support_image))
+			support_label_list.append(p(support_label))
 		
 		for k in range(self.unsup):
 			# same as above
@@ -169,12 +173,13 @@ class GeneralDataLoader(Dataset):
 			unsup_image = cv2.cvtColor(unsup_image, cv2.COLOR_BGR2RGB)
 			unsup_image = np.float32(unsup_image)
 			
-			unsup_image_list.append(unsup_image)
+			unsup_image_list.append(p(unsup_image))
 			
 		# Now we should have all support images 
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
 		assert len(unsup_image_list) == self.unsup
-		return support_image_list, support_label_list, unsup_image_list, [img]
+		
+		return support_image_list, support_label_list, unsup_image_list, [p(img)]
 		# q_graph = img2graph(img, label)
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [img])
