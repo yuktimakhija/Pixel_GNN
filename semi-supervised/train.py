@@ -64,7 +64,7 @@ run = max(run_dict.keys()) + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 starttime = time.time()
 
-dirname = f"./weights/{dataset}/{config['ways']}way_{config['shots']}shot/{run}/"
+dirname = f"./weights/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 run_dict[run] = dirname # updating run number
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
