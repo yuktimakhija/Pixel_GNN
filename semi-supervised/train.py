@@ -60,12 +60,12 @@ if dataset_type == 'general':
 GNN_Encoder.train()
 GNN_Decoder.train()
 run_dict = json.load(open('runs.json'))
-run = max(run_dict.keys()) + 1
+run = run_dict['last_run'] + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 starttime = time.time()
 
 dirname = f"./weights/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
-run_dict[run] = dirname # updating run number
+run_dict['list'][run] = dirname # updating run number
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 # iterate over dataloader and get a batch
