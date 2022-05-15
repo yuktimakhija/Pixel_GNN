@@ -1,4 +1,3 @@
-from django import conf
 from torch.utils.data import Dataset
 import glob
 import numpy as np
