@@ -5,7 +5,7 @@ config = {
 	"dataset": "COCO", # COCO, BCV, CT_ORG, DECATHLON
 	"split": 0, # 0-3 for coco
 	"test_dataset": "",
-	"lists_path": "../lists/",
+	"lists_path": "../lists",
 
 	"mode": "train", # or test/val
 	"shots": 1,
