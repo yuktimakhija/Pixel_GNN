@@ -59,7 +59,7 @@ class GeneralDataLoader(Dataset):
 	def __getitem__(self, idx):
 		# adapted from cyctr
 		q = transforms.Compose([transforms.ToTensor(), transforms.Resize((256,256))])
-		p = lambda x: p(x).permute(1,2,0)
+		p = lambda x: q(x).permute(1,2,0)
 
 		imgpath, lblpath = self.sup_data_list[idx]
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
