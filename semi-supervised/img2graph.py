@@ -350,7 +350,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 		edge_weights += (alpha*f(a[1:, 1:], b[:-1, :-1]) + beta*torch.abs(lab[1:, 1:] - prev_img_lab[:-1, :-1]).reshape(-1)).tolist()
 		edges[0] += indices[1:, 1:].reshape(-1).tolist()
 		edges[1] += (indices-nn)[:-1, :-1].reshape(-1).tolist()
-		edge_weights += alpha*f(a[1:, 1:], b[:-1, :-1]) + beta*torch.abs(lab[1:, 1:] - prev_img_lab[:-1, :-1]).reshape(-1).tolist()
+		edge_weights += (alpha*f(a[1:, 1:], b[:-1, :-1]) + beta*torch.abs(lab[1:, 1:] - prev_img_lab[:-1, :-1]).reshape(-1)).tolist()
 		edges[1] += indices[1:, 1:].reshape(-1).tolist()
 		edges[0] += (indices-nn)[:-1, :-1].reshape(-1).tolist()
 		# top: down left and bottom: up right
