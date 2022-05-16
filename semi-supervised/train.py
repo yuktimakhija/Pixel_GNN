@@ -13,10 +13,14 @@ from torch_geometric.data import Data, DataLoader
 import json
 
 def augment(unsup_graph):
-	aug1, aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
+	aug1 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
 					A.FeatureMasking(pf=0.1),
 					A.EdgeRemoving(pe=0.1)],
-					num_choices=2)
+					num_choices=1)
+	aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
+					A.FeatureMasking(pf=0.1),
+					A.EdgeRemoving(pe=0.1)],
+					num_choices=1)
 	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
