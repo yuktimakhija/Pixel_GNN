@@ -53,17 +53,17 @@ class Node2NodeSupConLoss(nn.Module):
 			# while the sample is not valid, sample again.
 			# while(not self.check_valid(y, sampled_nodes)):
 			# 	sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
-			positive_samples = torch.where(y[sampled_nodes] == y[anchor])
+			positive_samples = torch.where(y[sampled_nodes] == y[anchor])[0]
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0
 			# negative_samples = torch.ones_like(positive_samples)
 			# negative_samples[positive_samples] = 0
 			distance = CosineSimilarity()
-			pos_sim = distance(x[anchor], x[positive_samples])
-			all_sim = distance(x[anchor], x[sampled_nodes])
+			pos_sim = distance(x[anchor].unsqueeze(0), x[positive_samples])
+			all_sim = distance(x[anchor].unsqueeze(0), x[sampled_nodes])
 			numerator = torch.sum(torch.exp(pos_sim/config['temp']))
 			denominator = torch.sum(torch.exp(all_sim/config['temp']))
 			# normalize by number of positive samples per anchor according to formula
-			total_loss += (-1/positive_samples.shape[0])(torch.log(numerator/denominator))
+			total_loss += (-1/positive_samples.shape[0])*(torch.log(numerator/denominator))
 		
 		return total_loss
 
