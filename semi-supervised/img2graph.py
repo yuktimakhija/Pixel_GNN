@@ -203,7 +203,6 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	y_labelled = torch.tensor([])
 	# y_unlabelled = torch.tensor([])
 	y_task = torch.tensor([])
-	num_node_features = 3 if dataset in ['x'] else 1
 
 	index = np.arange(num_label+M+Q) # order in which images appear in graph
 	random.shuffle(index) # for i in index: if i<num_label then labelled else unlabeled 

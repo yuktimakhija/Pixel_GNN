@@ -182,7 +182,7 @@ class GeneralDataLoader(Dataset):
 		assert len(unsup_image_list) == self.unsup
 		
 
-		return support_image_list, support_label_list, unsup_image_list, [p(img)]
+		# return support_image_list, support_label_list, unsup_image_list, [p(img)]
 		# q_graph = img2graph(img, label)
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [p(img)])
