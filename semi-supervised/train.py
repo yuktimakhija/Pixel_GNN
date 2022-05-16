@@ -9,7 +9,7 @@ import time
 import GCL.augmentors as A
 from GCL.models import DualBranchContrast
 import GCL.losses as L
-from torch_geometric.data import Data
+from torch_geometric.data import Data, DataLoader
 import json
 
 def augment(unsup_graph):
@@ -50,7 +50,7 @@ if dataset_type == 'general':
 	train_sup_list = lists_path + 'train_sup_list.json'
 	train_unsup_list = lists_path + 'train_unsup_list.json'
 	train_data = dataloader.GeneralDataLoader(train_sup_list, train_unsup_list)
-	trainloader = torch.utils.data.DataLoader(train_data, batch_size=batch_size, shuffle = True, 
+	trainloader = DataLoader(train_data, batch_size=batch_size, shuffle = True, 
 												pin_memory = True, drop_last=True) 
 
 
