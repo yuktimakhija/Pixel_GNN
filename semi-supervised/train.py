@@ -70,7 +70,7 @@ json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 # iterate over dataloader and get a batch
 for episode in tqdm(range(n_episodes)):
-	print(f'Episode {episode}')
+	# tqdm.write(f'Episode {episode}')
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
 	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), leave=False):
 		encoder_optimizer.zero_grad()
