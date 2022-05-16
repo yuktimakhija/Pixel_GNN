@@ -17,6 +17,7 @@ class Node2NodeSupConLoss(nn.Module):
 		classes, counts = y[sampled].unique(return_counts=True)
 		# ideal should be (total samples)/(total classes) [all classes have same number of images]
 		ideal = y[sampled].shape[0]/classes.shape[0]
+		print(counts)
 		# normalize counts array by ideal value
 		counts = counts/ideal
 		# we can allow upto 20% deviation in the ratio, i.e. for 2 classes
