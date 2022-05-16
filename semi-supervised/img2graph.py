@@ -451,10 +451,16 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edge_weights_combined += ew
 				edges_combined[0] += e[0]
 				edges_combined[1] += e[1]
+	edges_lab = torch.tensor(edges_labelled)
+	edges_unlab = torch.tensor(edges_unlabeled)
+	edges_task = torch.tensor(edges_combined)
+	ew_lab = torch.tensor(edge_weights_labelled)
+	ew_unlab = torch.tensor(edge_weights_unlabeled)
+	ew_tasks = torch.tensor(edge_weights_combined)
 
-	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled).to(device)
-	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled).to(device)
-	task_graph = Data(x=x_task, y=y_task, edge_index=edges_combined, edge_attr=edge_weights_combined).to(device)
+	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_lab, edge_attr=ew_lab).to(device)
+	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlab, edge_attr=ew_unlab).to(device)
+	task_graph = Data(x=x_task, y=y_task, edge_index=edges_task, edge_attr=ew_tasks).to(device)
 	return query_index, labelled_index, sup_graph, unsup_graph, task_graph 
 # def visualise_graph(data):
 # 	import matplotlib.pyplot as plt
