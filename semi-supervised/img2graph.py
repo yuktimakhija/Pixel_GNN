@@ -387,11 +387,14 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			if (i - labelled_num >0):
 				edges_labelled[0] += (np.array(e[0])-(i - labelled_num)*nn).tolist()
 				edges_labelled[1] += (np.array(e[1])-(i - labelled_num)*nn).tolist()
+			else:
+				edges_labelled[0] += (np.array(e[0])).tolist()
+				edges_labelled[1] += (np.array(e[1])).tolist()
 			if labelled_num != 0:
 				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],labelled_num,index[i],prev_lab_index)
 				edge_weights_labelled += ew
 				edges_labelled[0] += e[0]
-				edges_labelled[0] += e[1]
+				edges_labelled[1] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -416,11 +419,14 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			if (i - unlabeled_num >0):
 				edges_unlabeled[0] += (np.array(e[0])-(i - unlabeled_num)*nn).tolist()
 				edges_unlabeled[1] += (np.array(e[1])-(i - unlabeled_num)*nn).tolist()
+			else:
+				edges_unlabeled[0] += (np.array(e[0])).tolist()
+				edges_unlabeled[1] += (np.array(e[1])).tolist()
 			if unlabeled_num != 0:
 				ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],unlabeled_num,index[i],prev_unlab_index)
 				edge_weights_unlabeled += ew
 				edges_unlabeled[0] += e[0]
-				edges_unlabeled[0] += e[1]
+				edges_unlabeled[1] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
