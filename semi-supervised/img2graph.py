@@ -454,9 +454,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	edges_lab = torch.tensor(edges_labelled, dtype=torch.long)
 	edges_unlab = torch.tensor(edges_unlabeled, dtype=torch.long)
 	edges_task = torch.tensor(edges_combined, dtype=torch.long)
-	ew_lab = torch.tensor(edge_weights_labelled)
-	ew_unlab = torch.tensor(edge_weights_unlabeled)
-	ew_tasks = torch.tensor(edge_weights_combined)
+	ew_lab = torch.tensor(edge_weights_labelled).reshape(-1,1)
+	ew_unlab = torch.tensor(edge_weights_unlabeled).reshape(-1,1)
+	ew_tasks = torch.tensor(edge_weights_combined).reshape(-1,1)
 
 	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_lab, edge_attr=ew_lab).to(device)
 	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlab, edge_attr=ew_unlab).to(device)
