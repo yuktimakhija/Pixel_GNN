@@ -60,6 +60,8 @@ class GeneralDataLoader(Dataset):
 		# adapted from cyctr
 		q = transforms.Compose([transforms.ToTensor(), transforms.Resize((256,256))])
 		p = lambda x: q(x).permute(1,2,0)
+		q_label = transforms.Resize((256,256))
+		p_label = lambda x:q_label(torch.tensor(x, dtype=torch.int).unsqueeze(0)).permute(1,2,0)
 
 		imgpath, lblpath = self.sup_data_list[idx]
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
@@ -164,7 +166,7 @@ class GeneralDataLoader(Dataset):
 				raise (RuntimeError("Support Image & label shape mismatch: " + support_image_path + " " + support_label_path + "\n"))     
 
 			support_image_list.append(p(support_image))
-			support_label_list.append(p(support_label))
+			support_label_list.append(p_label(support_label))
 		
 		for k in range(self.unsup):
 			# same as above
@@ -180,16 +182,16 @@ class GeneralDataLoader(Dataset):
 		assert len(unsup_image_list) == self.unsup
 		
 
-		return support_image_list, support_label_list, unsup_image_list, [p(img)]
+		# return support_image_list, support_label_list, unsup_image_list, [p(img)]
 		# q_graph = img2graph(img, label)
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [p(img)])
 
 		# print(q_index, sup_index, sup_graph, unsup_graph, task_graph)
 		if self.mode == 'train':
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p_label(label).reshape(-1)
 		else:
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p_label(label).reshape(-1)
 
 
 def make_dataset(split, path, data_list, unsup_data_list, training_classes):
