@@ -110,7 +110,7 @@ for episode in tqdm(range(n_episodes)):
 		task_embs_d = Data(x=task_embs[0].detach(), edge_index=task_embs[1][0].detach(), edge_attr=task_embs[1][1].detach())
 		task_embs = GNN_Decoder(task_embs_d)
 		# sup_index += q_index
-		loss = loss_fn(task_embs[0][sup_index + q_index], torch.cat((task_graph.y[sup_index], q_label)))
+		loss = loss_fn(task_embs[0][sup_index + q_index], torch.cat((task_graph.y[sup_index], q_label.to(device))))
 		episode_losses[3] += loss.item()
 		loss.backward()
 		decoder_optimizer.step()
