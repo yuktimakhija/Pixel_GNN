@@ -1,4 +1,5 @@
 import imp
+from turtle import distance
 # from pytorch_metric_learning.losses.generic_pair_loss import GenericPairLoss
 import torch
 import torch.nn as nn
@@ -56,8 +57,9 @@ class Node2NodeSupConLoss(nn.Module):
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0
 			# negative_samples = torch.ones_like(positive_samples)
 			# negative_samples[positive_samples] = 0
-			pos_sim = CosineSimilarity(x[anchor], x[positive_samples])
-			all_sim = CosineSimilarity(x[anchor], x[sampled_nodes])
+			distance = CosineSimilarity()
+			pos_sim = distance(x[anchor], x[positive_samples])
+			all_sim = distance(x[anchor], x[sampled_nodes])
 			numerator = torch.sum(torch.exp(pos_sim/config['temp']))
 			denominator = torch.sum(torch.exp(all_sim/config['temp']))
 			# normalize by number of positive samples per anchor according to formula
