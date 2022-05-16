@@ -185,7 +185,7 @@ class GeneralDataLoader(Dataset):
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [p(img)])
 
-		print(q_index, sup_index, sup_graph, unsup_graph, task_graph)
+		# print(q_index, sup_index, sup_graph, unsup_graph, task_graph)
 		if self.mode == 'train':
 			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
 		else:
