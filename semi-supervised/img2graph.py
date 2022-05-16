@@ -183,7 +183,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	nn = n**2;
 	alpha, beta = config['alpha'], config['beta']
 	dataset = config['dataset']
-	num_node_features = 3 if dataset in ['coco'] else 1
+	num_node_features = 3 if dataset in ['COCO'] else 1
 	edges = [[],[]]
 	edgelist = []
 	edge_weights = []
