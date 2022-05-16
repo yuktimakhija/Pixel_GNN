@@ -107,14 +107,14 @@ for episode in tqdm(range(n_episodes)):
 		# get embeddings for task graphs and query graphs (all batches/parallel)
 		with torch.no_grad():
 			task_embs = GNN_Encoder(task_graph)
-		task_embs = task_embs.detach()
-		task_embs = GNN_Decoder(task_embs)
+		task_embs_d = Data(x=task_embs[0].detach(), edge_index=task_embs[1][0].detach(), edge_attr=task_embs[1][1].detach())
+		task_embs = GNN_Decoder(task_embs_d)
 		# sup_index += q_index
-		loss = loss_fn(task_embs[sup_index + q_index].x, torch.cat((task_graph[sup_index].y, q_label)))
+		loss = loss_fn(task_embs[0][sup_index + q_index], torch.cat((task_graph.y[sup_index], q_label)))
 		episode_losses[3] += loss.item()
 		loss.backward()
 		decoder_optimizer.step()
-		q_loss = loss_fn(task_embs[q_index].x, q_label)
+		q_loss = loss_fn(task_embs[0][q_index], q_label)
 		episode_losses[4] += q_loss.item()
 		# task ends
 
