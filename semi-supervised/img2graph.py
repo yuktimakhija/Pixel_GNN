@@ -183,7 +183,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	nn = n**2;
 	alpha, beta = config['alpha'], config['beta']
 	dataset = config['dataset']
-	num_node_features = 3 if dataset in ['coco'] else 1
+	num_node_features = 3 if dataset in ['COCO'] else 1
 	edges = [[],[]]
 	edgelist = []
 	edge_weights = []
@@ -387,11 +387,14 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			if (i - labelled_num >0):
 				edges_labelled[0] += (np.array(e[0])-(i - labelled_num)*nn).tolist()
 				edges_labelled[1] += (np.array(e[1])-(i - labelled_num)*nn).tolist()
+			else:
+				edges_labelled[0] += (np.array(e[0])).tolist()
+				edges_labelled[1] += (np.array(e[1])).tolist()
 			if labelled_num != 0:
 				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],labelled_num,index[i],prev_lab_index)
 				edge_weights_labelled += ew
 				edges_labelled[0] += e[0]
-				edges_labelled[0] += e[1]
+				edges_labelled[1] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -416,11 +419,14 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			if (i - unlabeled_num >0):
 				edges_unlabeled[0] += (np.array(e[0])-(i - unlabeled_num)*nn).tolist()
 				edges_unlabeled[1] += (np.array(e[1])-(i - unlabeled_num)*nn).tolist()
+			else:
+				edges_unlabeled[0] += (np.array(e[0])).tolist()
+				edges_unlabeled[1] += (np.array(e[1])).tolist()
 			if unlabeled_num != 0:
 				ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],unlabeled_num,index[i],prev_unlab_index)
 				edge_weights_unlabeled += ew
 				edges_unlabeled[0] += e[0]
-				edges_unlabeled[0] += e[1]
+				edges_unlabeled[1] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -451,10 +457,16 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edge_weights_combined += ew
 				edges_combined[0] += e[0]
 				edges_combined[1] += e[1]
+	edges_lab = torch.tensor(edges_labelled, dtype=torch.long)
+	edges_unlab = torch.tensor(edges_unlabeled, dtype=torch.long)
+	edges_task = torch.tensor(edges_combined, dtype=torch.long)
+	ew_lab = torch.tensor(edge_weights_labelled).reshape(-1,1)
+	ew_unlab = torch.tensor(edge_weights_unlabeled).reshape(-1,1)
+	ew_tasks = torch.tensor(edge_weights_combined).reshape(-1,1)
 
-	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled).to(device)
-	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled).to(device)
-	task_graph = Data(x=x_task, y=y_task, edge_index=edges_combined, edge_attr=edge_weights_combined).to(device)
+	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_lab, edge_attr=ew_lab).to(device)
+	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlab, edge_attr=ew_unlab).to(device)
+	task_graph = Data(x=x_task, y=y_task, edge_index=edges_task, edge_attr=ew_tasks).to(device)
 	return query_index, labelled_index, sup_graph, unsup_graph, task_graph 
 # def visualise_graph(data):
 # 	import matplotlib.pyplot as plt

@@ -179,14 +179,17 @@ class GeneralDataLoader(Dataset):
 		assert len(support_label_list) == self.shot and len(support_image_list) == self.shot                    
 		assert len(unsup_image_list) == self.unsup
 		
-		# return support_image_list, support_label_list, unsup_image_list, [p(img)]
+
+		return support_image_list, support_label_list, unsup_image_list, [p(img)]
 		# q_graph = img2graph(img, label)
 		q_index, sup_index, sup_graph, unsup_graph, task_graph =\
 			 support_graph_matrix(support_image_list, support_label_list, unsup_image_list, [p(img)])
+
+		# print(q_index, sup_index, sup_graph, unsup_graph, task_graph)
 		if self.mode == 'train':
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, torch.tensor(label.reshape(-1))
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
 		else:
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, torch.tensor(label.reshape(-1))
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
 
 
 def make_dataset(split, path, data_list, unsup_data_list, training_classes):

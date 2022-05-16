@@ -13,10 +13,14 @@ from torch_geometric.data import Data, DataLoader
 import json
 
 def augment(unsup_graph):
-	aug1, aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
+	aug1 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
 					A.FeatureMasking(pf=0.1),
 					A.EdgeRemoving(pe=0.1)],
-					num_choices=2)
+					num_choices=1)
+	aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
+					A.FeatureMasking(pf=0.1),
+					A.EdgeRemoving(pe=0.1)],
+					num_choices=1)
 	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
@@ -87,7 +91,7 @@ for episode in tqdm(range(n_episodes)):
 		# once embeddings are here, make projection heads from a simple MLP?
 		# ?
 		# call the loss function on task graph augs (query??) and obtain contrastive loss
-		sup_CL, unsup_CL = supCL_fn(sup_embs.x, sup_embs.y), unsupCL_fn(unsup_embs1.x, unsup_embs2.x)
+		sup_CL, unsup_CL = supCL_fn(sup_embs[0], sup_graph.y), unsupCL_fn(unsup_embs1[0], unsup_embs2[0])
 		contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 		episode_losses[0] += contrastive_loss.item()
 		episode_losses[1] += sup_CL.item()
