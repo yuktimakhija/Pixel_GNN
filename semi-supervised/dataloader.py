@@ -187,9 +187,9 @@ class GeneralDataLoader(Dataset):
 
 		print(q_index, sup_index, sup_graph, unsup_graph, task_graph)
 		if self.mode == 'train':
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, torch.tensor(label.reshape(-1))
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
 		else:
-			return q_index, sup_index, sup_graph, unsup_graph, task_graph, torch.tensor(label.reshape(-1))
+			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p(label).reshape(-1)
 
 
 def make_dataset(split, path, data_list, unsup_data_list, training_classes):
