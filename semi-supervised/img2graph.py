@@ -291,6 +291,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	def inter_graph_connections(a, b, img_num, img_index, prev_img_index):
 		indices = np.arange(nn).reshape(a.shape[:-1]) + img_num*nn
 		lab = torch.zeros(a.shape[:-1])
+		prev_img_lab = torch.zeros(b.shape[:-1])
 		edges = [[],[]]
 		edge_weights = []
 		if img_index<num_label and prev_img_index<num_label:
