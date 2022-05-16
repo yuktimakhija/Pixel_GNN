@@ -379,18 +379,18 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			y_labelled = torch.cat((y_labelled, labels[index[i]].reshape(-1).clone().detach()))
 			y_task = torch.cat((y_task, labels[index[i]].reshape(-1).clone().detach()))
 			ew,e = intra_graph_connections(labelled_images[index[i]],i,index[i])
-			edge_weights_combined.append(ew)
-			edge_weights_labelled.append(ew)
-			edges_combined[0].append(e[0])
-			edges_combined[1].append(e[1])
+			edge_weights_combined += ew
+			edge_weights_labelled += ew
+			edges_combined[0] += e[0]
+			edges_combined[1] += e[1]
 			if (i - labelled_num >0):
-				edges_labelled[0].append(e[0]-(i - labelled_num)*nn)
-				edges_labelled[1].append(e[1]-(i - labelled_num)*nn)
+				edges_labelled[0] += (np.array(e[0])-(i - labelled_num)*nn).tolist()
+				edges_labelled[1] += (np.array(e[1])-(i - labelled_num)*nn).tolist()
 			if labelled_num != 0:
 				ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],labelled_num,index[i],prev_lab_index)
-				edge_weights_labelled.append(ew)
-				edges_labelled[0].append(e[0])
-				edges_labelled[0].append(e[1])
+				edge_weights_labelled += ew
+				edges_labelled[0] += e[0]
+				edges_labelled[0] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(labelled_images[index[i]],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -398,9 +398,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 					ew,e = inter_graph_connections(labelled_images[index[i]],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(labelled_images[index[i]],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
-				edge_weights_combined.append(ew)
-				edges_combined[0].append(e[0])
-				edges_combined[1].append(e[1])
+				edge_weights_combined += ew
+				edges_combined[0] += e[0]
+				edges_combined[1] += e[1]
 			labelled_num += 1
 			prev_lab_index = index[i]
 		elif index[i]< (M+num_label) : #unlabeled
@@ -408,18 +408,18 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			x_task = torch.cat((x_task, unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).clone().detach()))
 			y_task = torch.cat((y_task, -torch.ones(unlabeled_images[index[i]-num_label].reshape(-1).shape)))
 			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
-			edge_weights_combined.append(ew)
-			edge_weights_unlabeled.append(ew)
-			edges_combined[0].append(e[0])
-			edges_combined[1].append(e[1])
+			edge_weights_combined += ew
+			edge_weights_unlabeled += ew
+			edges_combined[0] += e[0]
+			edges_combined[1] += e[1]
 			if (i - unlabeled_num >0):
-				edges_unlabeled[0].append(e[0]-(i - unlabeled_num)*nn)
-				edges_unlabeled[1].append(e[1]-(i - unlabeled_num)*nn)
+				edges_unlabeled[0] += (np.array(e[0])-(i - unlabeled_num)*nn).tolist()
+				edges_unlabeled[1] += (np.array(e[1])-(i - unlabeled_num)*nn).tolist()
 			if unlabeled_num != 0:
 				ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],unlabeled_num,index[i],prev_unlab_index)
-				edge_weights_unlabeled.append(ew)
-				edges_unlabeled[0].append(e[0])
-				edges_unlabeled[0].append(e[1])
+				edge_weights_unlabeled += ew
+				edges_unlabeled[0] += e[0]
+				edges_unlabeled[0] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -427,9 +427,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],query_images[index[index[query_index[-1]]-num_label-M]-num_label-M],i,index[i],index[query_index[-1]])
-				edge_weights_combined.append(ew)
-				edges_combined[0].append(e[0])
-				edges_combined[1].append(e[1])
+				edge_weights_combined += ew
+				edges_combined[0] += e[0]
+				edges_combined[1] += e[1]
 			unlabeled_num += 1
 			prev_unlab_index = index[i]
 		else: #query
@@ -437,9 +437,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			y_task = torch.cat((y_task, -torch.ones(query_images[index[i]-num_label-M].reshape(-1).shape)))
 			query_index.append(i)
 			ew,e = intra_graph_connections(query_images[index[i]-num_label-M],i,index[i])
-			edge_weights_combined.append(ew)
-			edges_combined[0].append(e[0])
-			edges_combined[1].append(e[1])
+			edge_weights_combined += ew
+			edges_combined[0] += e[0]
+			edges_combined[1] += e[1]
 			if i!=0:
 				if index[i-1] < num_label:
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],labelled_images[prev_lab_index],i,index[i],prev_lab_index)
@@ -447,9 +447,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
 					ew,e = inter_graph_connections(query_images[index[i]-num_label-M],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
-				edge_weights_combined.append(ew)
-				edges_combined[0].append(e[0])
-				edges_combined[1].append(e[1])
+				edge_weights_combined += ew
+				edges_combined[0] += e[0]
+				edges_combined[1] += e[1]
 
 	sup_graph = Data(x=x_labelled, y=y_labelled, edge_index=edges_labelled, edge_attr=edge_weights_labelled).to(device)
 	unsup_graph = Data(x=x_unlabeled, edge_index=edges_unlabeled, edge_attr=edge_weights_unlabeled).to(device)
