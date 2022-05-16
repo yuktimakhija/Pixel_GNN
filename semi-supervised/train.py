@@ -77,7 +77,7 @@ json.dump(run_dict, open('runs.json', 'w'), indent=4)
 for episode in tqdm(range(n_episodes)):
 	# tqdm.write(f'Episode {episode}')
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
-	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), leave=False):
+	for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in enumerate(trainloader):
 		encoder_optimizer.zero_grad()
 		decoder_optimizer.zero_grad()
 		# all tensors are on device already
@@ -110,7 +110,19 @@ for episode in tqdm(range(n_episodes)):
 		task_embs_d = Data(x=task_embs[0].detach(), edge_index=task_embs[1][0].detach(), edge_attr=task_embs[1][1].detach())
 		task_embs = GNN_Decoder(task_embs_d)
 		# sup_index += q_index
-		loss = loss_fn(task_embs[0][sup_index + q_index], torch.cat((task_graph.y[sup_index], q_label.to(device))))
+		loss_labels = torch.tensor([])
+		calcd_indices = torch.tensor([], dtype=torch.long)
+		print(sup_index, q_index)
+		n = q_label.shape[-1]
+		for j in sup_index[0].tolist():
+			# now iterating inside batch (batch_size # of iterations)
+			calcd_indices = torch.cat((calcd_indices,torch.arange(j*n,(j+1)*n)))
+		print(f't{task_graph}')
+		print(f't{task_graph.y[calcd_indices].shape}')
+		print(f'q{q_label.shape}')
+		print(f'c{calcd_indices.shape}')
+		loss_labels = torch.cat((task_graph.y[calcd_indices], q_label.to(device)))
+		loss = loss_fn(task_embs[0][sup_index + q_index], loss_labels)
 		episode_losses[3] += loss.item()
 		loss.backward()
 		decoder_optimizer.step()
