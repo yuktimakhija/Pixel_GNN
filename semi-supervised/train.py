@@ -91,7 +91,7 @@ for episode in tqdm(range(n_episodes)):
 		# once embeddings are here, make projection heads from a simple MLP?
 		# ?
 		# call the loss function on task graph augs (query??) and obtain contrastive loss
-		sup_CL, unsup_CL = supCL_fn(sup_embs.x, sup_embs.y), unsupCL_fn(unsup_embs1.x, unsup_embs2.x)
+		sup_CL, unsup_CL = supCL_fn(sup_embs[0], sup_graph.y), unsupCL_fn(unsup_embs1[0], unsup_embs2[0])
 		contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 		episode_losses[0] += contrastive_loss.item()
 		episode_losses[1] += sup_CL.item()
