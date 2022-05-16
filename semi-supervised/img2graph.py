@@ -427,7 +427,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				elif index[i-1] < num_label +M:
 					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],unlabeled_images[prev_unlab_index-num_label],i,index[i],prev_unlab_index)
 				else:
-					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],query_images[index[index[query_index[-1]]-num_label-M]-num_label-M],i,index[i],index[query_index[-1]])
+					ew,e = inter_graph_connections(unlabeled_images[index[i]-num_label],query_images[index[query_index[-1]]-num_label-M],i,index[i],index[query_index[-1]])
 				edge_weights_combined += ew
 				edges_combined[0] += e[0]
 				edges_combined[1] += e[1]
