@@ -51,7 +51,7 @@ if dataset_type == 'general':
 	train_unsup_list = lists_path + 'train_unsup_list.json'
 	train_data = dataloader.GeneralDataLoader(train_sup_list, train_unsup_list)
 	trainloader = DataLoader(train_data, batch_size=batch_size, shuffle = True, 
-												pin_memory = True, drop_last=True) 
+												drop_last=True) 
 
 
 # elif dataset_type == 'medical':

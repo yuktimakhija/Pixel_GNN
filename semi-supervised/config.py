@@ -26,7 +26,7 @@ config = {
 	"num_samples": 1000,
 	"temp": 0.07, # (default value used in a lot of places)
 	"unsup_weight": 0.5,
-	"batch_size": 4,
+	"batch_size": 1,
 	"n_episodes": 100,
 
 	# Medical Dataset paths
