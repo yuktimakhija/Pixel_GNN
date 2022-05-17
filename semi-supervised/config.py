@@ -15,7 +15,7 @@ config = {
 	# "model_params": {
 
 	# },
-	"num_neighbors": 2,
+	"num_neighbors": 1,
 	"alpha": 1,
 	"beta": 1,
 	"edge_weight_function": 'mean-abs', # mean-abs or euclidean or deltaE

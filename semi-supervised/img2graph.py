@@ -179,7 +179,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	Q = len(query_images)
 	n = labelled_images[0].shape[0]
 	num_neighbors_inter = 1 #number of neighbours (between graphs)	
-	num_neighbors = 2 # max distance of neighbors
+	num_neighbors = 1 # max distance of neighbors
 	nn = n**2;
 	alpha, beta = config['alpha'], config['beta']
 	dataset = config['dataset']
@@ -251,39 +251,39 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			edges[0] += indices[:-i, :-i].reshape(-1).tolist()
 			edges[1] += indices[i:, i:].reshape(-1).tolist()
 		
-		# remaining connections 
-		# 2 up and 1 right
-		edge_weights += (alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1)).tolist()
-		edges[0] += indices[2:, :-1].reshape(-1).tolist()
-		edges[1] += indices[:-2, 1:].reshape(-1).tolist()
-		# 2 down and 1 left
-		edge_weights += (alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1)).tolist()
-		edges[0] += indices[:-2, 1:].reshape(-1).tolist()
-		edges[1] += indices[2:, :-1].reshape(-1).tolist()
-		# 2 up and 1 left
-		edge_weights += (alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*torch.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1)).tolist()
-		edges[0] += indices[2:, 1:].reshape(-1).tolist()
-		edges[1] += indices[:-2, :-1].reshape(-1).tolist()
-		# 2 down and 1 right
-		edge_weights += (alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*torch.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1)).tolist()
-		edges[0] += indices[:-2, :-1].reshape(-1).tolist()
-		edges[1] += indices[2:, 1:].reshape(-1).tolist()
-		# 1 up and 2 right
-		edge_weights += (alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*torch.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1)).tolist()
-		edges[0] += indices[1:, :-2].reshape(-1).tolist()
-		edges[1] += indices[:-1, 2:].reshape(-1).tolist()
-		# 1 down and 2 left
-		edge_weights += (alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*torch.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1)).tolist()
-		edges[1] += indices[1:, :-2].reshape(-1).tolist()
-		edges[0] += indices[:-1, 2:].reshape(-1).tolist()
-		# 1 up and 2 left
-		edge_weights += (alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*torch.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1)).tolist()
-		edges[0] += indices[1:, 2:].reshape(-1).tolist()
-		edges[1] += indices[:-1, :-2].reshape(-1).tolist()
-		# 1 down and 2 right	
-		edge_weights += (alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*torch.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1)).tolist()
-		edges[1] += indices[1:, 2:].reshape(-1).tolist()
-		edges[0] += indices[:-1, :-2].reshape(-1).tolist()
+		# # remaining connections 
+		# # 2 up and 1 right
+		# edge_weights += (alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1)).tolist()
+		# edges[0] += indices[2:, :-1].reshape(-1).tolist()
+		# edges[1] += indices[:-2, 1:].reshape(-1).tolist()
+		# # 2 down and 1 left
+		# edge_weights += (alpha*f(a[2:, :-1], a[:-2, 1:]) + beta*torch.abs(lab[2:, :-1] - lab[:-2, 1:]).reshape(-1)).tolist()
+		# edges[0] += indices[:-2, 1:].reshape(-1).tolist()
+		# edges[1] += indices[2:, :-1].reshape(-1).tolist()
+		# # 2 up and 1 left
+		# edge_weights += (alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*torch.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1)).tolist()
+		# edges[0] += indices[2:, 1:].reshape(-1).tolist()
+		# edges[1] += indices[:-2, :-1].reshape(-1).tolist()
+		# # 2 down and 1 right
+		# edge_weights += (alpha*f(a[2:, 1:], a[:-2, :-1]) + beta*torch.abs(lab[2:, 1:] - lab[:-2, :-1]).reshape(-1)).tolist()
+		# edges[0] += indices[:-2, :-1].reshape(-1).tolist()
+		# edges[1] += indices[2:, 1:].reshape(-1).tolist()
+		# # 1 up and 2 right
+		# edge_weights += (alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*torch.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1)).tolist()
+		# edges[0] += indices[1:, :-2].reshape(-1).tolist()
+		# edges[1] += indices[:-1, 2:].reshape(-1).tolist()
+		# # 1 down and 2 left
+		# edge_weights += (alpha*f(a[1:, :-2], a[:-1, 2:]) + beta*torch.abs(lab[1:, :-2] - lab[:-1, 2:]).reshape(-1)).tolist()
+		# edges[1] += indices[1:, :-2].reshape(-1).tolist()
+		# edges[0] += indices[:-1, 2:].reshape(-1).tolist()
+		# # 1 up and 2 left
+		# edge_weights += (alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*torch.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1)).tolist()
+		# edges[0] += indices[1:, 2:].reshape(-1).tolist()
+		# edges[1] += indices[:-1, :-2].reshape(-1).tolist()
+		# # 1 down and 2 right	
+		# edge_weights += (alpha*f(a[1:, 2:], a[:-1, :-2]) + beta*torch.abs(lab[1:, 2:] - lab[:-1, :-2]).reshape(-1)).tolist()
+		# edges[1] += indices[1:, 2:].reshape(-1).tolist()
+		# edges[0] += indices[:-1, :-2].reshape(-1).tolist()
 
 		return edge_weights,edges
 	
