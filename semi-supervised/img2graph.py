@@ -371,8 +371,10 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	prev_lab_index, prev_unlab_index = 0,0
 	query_index = []
 	labelled_index = []
+	# print(index)
 	for i in range(len(index)):
 		if index[i]<num_label: #labeled 
+			# print('L')
 			labelled_index.append(i)
 			x_labelled = torch.cat((x_labelled, labelled_images[index[i]].reshape(-1,num_node_features).clone().detach()))
 			x_task = torch.cat((x_task, labelled_images[index[i]].reshape(-1,num_node_features).clone().detach()))
@@ -407,9 +409,10 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			labelled_num += 1
 			prev_lab_index = index[i]
 		elif index[i]< (M+num_label) : #unlabeled
+			# print('U')
 			x_unlabeled = torch.cat((x_unlabeled, unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).clone().detach()))
 			x_task = torch.cat((x_task, unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).clone().detach()))
-			y_task = torch.cat((y_task, -torch.ones(unlabeled_images[index[i]-num_label].reshape(-1).shape)))
+			y_task = torch.cat((y_task, -torch.ones(unlabeled_images[index[i]-num_label].reshape(-1,num_node_features).shape[:-1])))
 			ew,e = intra_graph_connections(unlabeled_images[index[i]-num_label],i,index[i])
 			edge_weights_combined += ew
 			edge_weights_unlabeled += ew
@@ -439,8 +442,9 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 			unlabeled_num += 1
 			prev_unlab_index = index[i]
 		else: #query
+			# print('Q')
 			x_task = torch.cat((x_task, query_images[index[i]-num_label-M].reshape(-1,num_node_features).clone().detach()))
-			y_task = torch.cat((y_task, -torch.ones(query_images[index[i]-num_label-M].reshape(-1).shape)))
+			y_task = torch.cat((y_task, -torch.ones(query_images[index[i]-num_label-M].reshape(-1,num_node_features).shape[:-1])))
 			query_index.append(i)
 			ew,e = intra_graph_connections(query_images[index[i]-num_label-M],i,index[i])
 			edge_weights_combined += ew

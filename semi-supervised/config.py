@@ -7,10 +7,10 @@ config = {
 	"lists_path": "../lists",
 
 	"mode": "train", # or test/val
-	"shot": 1,
+	"shot": 5,
 	"ways": 1,
 	"n_queries": 1,
-	"unlabelled": 1,
+	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
 
