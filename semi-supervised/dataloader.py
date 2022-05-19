@@ -14,20 +14,20 @@ from torchvision import transforms
 # config = json.load("../config.json")
 
 class GeneralDataLoader(Dataset):
-	def __init__(self, sup_data_list, unsup_data_list):
+	def __init__(self, sup_data_list, unsup_data_list, split):
 		# sup_data_list is a list of 2-element lists of supervsied training data (20%)
 		# it is [ [img,label], [img,label], ....] 
 		# unsup_data_list is the same for unsupervsied training data (80%)
 		# it is [ [img,label], [img,label], ....] (only using labels to differentiate training and testing)
 		self.dataset = config['dataset']
-		self.split = config['split']
+		self.split = split
 		self.shot = config['shot']
 		self.unsup = config['unlabelled']
 		self.mode = config['mode']
 		self.rng = np.random.default_rng()
 		if self.dataset == 'COCO':
 			self.path = config['coco_path']
-			if config['split'] == 0:
+			if split == 0:
 				self.training_classes = list(range(21, 81)) # classes 21 to 80
 				self.testing_classes = list(range(1, 21)) # classes 1 to 20
 			elif self.split == 1:

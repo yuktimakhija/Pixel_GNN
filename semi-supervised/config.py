@@ -7,7 +7,7 @@ config = {
 	"lists_path": "../lists",
 
 	"mode": "train", # or test/val
-	"shot": 5,
+	"shot": 1,
 	"ways": 1,
 	"n_queries": 1,
 	"unlabelled": 6,
@@ -27,7 +27,7 @@ config = {
 	"temp": 0.07, # (default value used in a lot of places)
 	"unsup_weight": 0.5,
 	"batch_size": 1,
-	"n_episodes": 100,
+	"n_episodes": 2500,
 
 	# Medical Dataset paths
 	"bcv_path": "",
