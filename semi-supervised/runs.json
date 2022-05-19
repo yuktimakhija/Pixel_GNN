@@ -1,8 +1,6 @@
 {
-    "last_run": 3,
+    "last_run": 1,
     "list": {
-        "1": "./weights/COCO/1way_1shot/1/",
-        "2": "./weights/COCO/1way_1shot/2/",
-        "3": "./weights/COCO/1way_1shot/3/"
+        "1": "./weights/COCO/1way_1shot/1/"
     }
 }

@@ -80,7 +80,7 @@ starttime = time.time()
 dirname = f"./weights/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 os.makedirs(dirname, exist_ok=True)
 
-outfile = open(dirname+f'summary_split{split}.txt', 'w')
+outfile = open(dirname+f'summary_split{split}.txt')
 json.dump(config, open(dirname+f'config_split{split}.json', 'w'), indent=4)
 run_dict['list'][run] = dirname # updating run number
 run_dict['last_run'] = run
@@ -166,8 +166,6 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 
 	tqdm.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
 	tqdm.write(f'Classification Loss:{episode_losses[3]}')
-	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
-	outfile.write(f'Classification Loss:{episode_losses[3]}')
 
 print(f'PixelGNN training on {dataset} finished. Run {run} ended at {time.strftime("%H:%M:%S")}')
 endtime = time.time()

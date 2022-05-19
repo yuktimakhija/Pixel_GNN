@@ -61,7 +61,7 @@ class Node2NodeSupConLoss(nn.Module):
 			pos_sim = distance(x[anchor].unsqueeze(0), x[positive_samples])
 			all_sim = distance(x[anchor].unsqueeze(0), x[sampled_nodes])
 			numerator = torch.sum(torch.exp(pos_sim/config['temp']))
-			denominator = torch.sum(torch.exp(all_sim/config['temp']))
+			denominator = torch.sum(torch.exp(all_sim/config['temp'])) + torch.finfo(numerator.dtype).tiny
 			# normalize by number of positive samples per anchor according to formula
 			total_loss += (-1/positive_samples.shape[0])*(torch.log(numerator/denominator))
 		
