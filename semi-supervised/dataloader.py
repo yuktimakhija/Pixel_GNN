@@ -10,6 +10,7 @@ import random
 from img2graph import img2graph, support_graph_matrix
 from config import config
 from torchvision import transforms
+import torch.nn.functional as F
 
 # config = json.load("../config.json")
 
@@ -59,7 +60,7 @@ class GeneralDataLoader(Dataset):
 	def __getitem__(self, idx):
 		# adapted from cyctr
 		q = transforms.Compose([transforms.ToTensor(), transforms.Resize((256,256))])
-		p = lambda x: q(x).permute(1,2,0)
+		p = lambda x: F.normalize(q(x), dim=0).permute(1,2,0)
 		q_label = transforms.Resize((256,256))
 		p_label = lambda x:q_label(torch.tensor(x, dtype=torch.int).unsqueeze(0)).permute(1,2,0)
 

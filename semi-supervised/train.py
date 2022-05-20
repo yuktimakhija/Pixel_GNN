@@ -49,10 +49,10 @@ unsupCL_fn = contraster = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']),
 unsup_weight = config['unsup_weight']
 # loss_fn = loss.QueryClassificationLoss()
 loss_fn = torch.nn.CrossEntropyLoss()
-encoder_optimizer = torch.optim.Adam(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
-decoder_optimizer = torch.optim.Adam(GNN_Decoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+encoder_optimizer = torch.optim.Adadelta(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+decoder_optimizer = torch.optim.Adadelta(GNN_Decoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
 
-if len(sys.argv)>0:
+if len(sys.argv)>1:
 	split = int(sys.argv[1])
 else:
 	split = config['split']
@@ -91,8 +91,7 @@ print("Decoder Params",count_parameters(GNN_Decoder))
 # for episode in tqdm(range(n_episodes)):
 	# tqdm.write(f'Episode {episode}')
 for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), total=n_episodes):
-	if i > n_episodes:
-		break
+	print(sup_graph.x.min(), sup_graph.x.max())
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
 	encoder_optimizer.zero_grad()
 	decoder_optimizer.zero_grad()
@@ -161,13 +160,17 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# task ends
 
 	if i/n_episodes in [0.25,0.5,0.75,1.0]:
-		torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{config["split"]}_{i/n_episodes}%.pt')
-		torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{config["split"]}_{i/n_episodes}%.pt')
-
+		torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{split}_{i/n_episodes}%.pt')
+		torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{split}_{i/n_episodes}%.pt')
 	tqdm.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
 	tqdm.write(f'Classification Loss:{episode_losses[3]}')
-	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
-	outfile.write(f'Classification Loss:{episode_losses[3]}')
+	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})\n')
+	outfile.write(f'Classification Loss:{episode_losses[3]}\n')
+	if i+1 > n_episodes:
+		break
+
+torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{split}_final.pt')
+torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{split}_final.pt')
 
 print(f'PixelGNN training on {dataset} finished. Run {run} ended at {time.strftime("%H:%M:%S")}')
 endtime = time.time()

@@ -10,7 +10,7 @@ config = {
 	"shot": 1,
 	"ways": 1,
 	"n_queries": 1,
-	"unlabelled": 6,
+	"unlabelled": 1,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
 
@@ -24,7 +24,7 @@ config = {
 	# CL variables
 	"num_anchors": 1000,
 	"num_samples": 1000,
-	"temp": 0.07, # (default value used in a lot of places)
+	"temp": 0.1,
 	"unsup_weight": 0.5,
 	"batch_size": 1,
 	"n_episodes": 2500,
@@ -39,7 +39,7 @@ config = {
 	# "bcv_path": "",
 
 	# optimizer params
-	"init_lr": 0.001,
+	"init_lr": 0.1,
 	"weight_decay": 1e-6, 
 
 	"classes": {
