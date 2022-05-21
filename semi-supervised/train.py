@@ -81,10 +81,17 @@ dirname = f"./weights/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 os.makedirs(dirname, exist_ok=True)
 
 outfile = open(dirname+f'summary_split{split}.txt', 'w')
+outcsv = open(dirname+f'summary_split{split}.csv', 'w')
+outcsv.write('Episode, CL, SupCL, UnsupCL, ClassificationLoss\n')
 json.dump(config, open(dirname+f'config_split{split}.json', 'w'), indent=4)
 run_dict['list'][run] = dirname # updating run number
 run_dict['last_run'] = run
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
+
+master = open('all_runs.csv', 'a')
+master.write(f"\n{id},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
+master.close()
+
 print("Encoder Params",count_parameters(GNN_Encoder))
 print("Decoder Params",count_parameters(GNN_Decoder))
 # iterate over dataloader and get a batch
@@ -166,11 +173,16 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	tqdm.write(f'Classification Loss:{episode_losses[3]}')
 	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})\n')
 	outfile.write(f'Classification Loss:{episode_losses[3]}\n')
+	outcsv.write(f'{i},{episode_losses[0]},{episode_losses[1]},{episode_losses[2]},{episode_losses[3]}\n')
 	if i+1 > n_episodes:
 		break
 
 torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{split}_final.pt')
 torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{split}_final.pt')
+
+master = open('all_runs.csv', 'a')
+master.write('Yes')
+master.close()
 
 print(f'PixelGNN training on {dataset} finished. Run {run} ended at {time.strftime("%H:%M:%S")}')
 endtime = time.time()

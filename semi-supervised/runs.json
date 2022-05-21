@@ -1,5 +1,5 @@
 {
-    "last_run": 8,
+    "last_run": 14,
     "list": {
         "1": "./weights/COCO/1way_1shot/1/",
         "2": "./weights/COCO/1way_1shot/2/",
@@ -8,6 +8,12 @@
         "5": "./weights/COCO/1way_1shot/5/",
         "6": "./weights/COCO/1way_1shot/6/",
         "7": "./weights/COCO/1way_1shot/7/",
-        "8": "./weights/COCO/1way_1shot/8/"
+        "8": "./weights/COCO/1way_1shot/8/",
+        "9": "./weights/COCO/1way_1shot/9/",
+        "10": "./weights/COCO/1way_1shot/10/",
+        "11": "./weights/COCO/1way_1shot/11/",
+        "12": "./weights/COCO/1way_1shot/12/",
+        "13": "./weights/COCO/1way_1shot/13/",
+        "14": "./weights/COCO/1way_1shot/14/"
     }
 }
