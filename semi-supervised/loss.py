@@ -1,5 +1,4 @@
 import imp
-from turtle import distance
 # from pytorch_metric_learning.losses.generic_pair_loss import GenericPairLoss
 import torch
 import torch.nn as nn
@@ -42,26 +41,32 @@ class Node2NodeSupConLoss(nn.Module):
 		n = x.shape[0]
 		self.n = n
 		# pos_loss, neg_loss = 0,0
-		
+		size_negative = config['num_negatives']*config['ways']*config['shot']
+		size_positive = config['num_positives']*config['ways']*config['shot']
 		# randomly sample anchors from all graphs
 		selected_anchors = rng.integers(low=0, high=n, size=config['num_anchors'])
 		# do we check_valid here?
 
 		total_loss = 0
 		for anchor in selected_anchors:
-			sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
+			# sampled_nodes = rng.integers(low=0, high=n, size=size_samples)
 			# while the sample is not valid, sample again.
 			# while(not self.check_valid(y, sampled_nodes)):
 			# 	sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
-			positive_samples = torch.where(y[sampled_nodes] == y[anchor])[0]
+			positives = torch.where(y[:] == y[anchor])[0]
+			positive_indices = rng.integers(low=0, high=len(positives), size=size_positive)
+			positive_samples = positives[positive_indices]
+			negatives = torch.where(y[:] != y[anchor])[0]
+			negative_indices = rng.integers(low=0, high=len(negatives), size=size_negative)
+			negative_samples = positives[negative_indices]
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0
 			# negative_samples = torch.ones_like(positive_samples)
 			# negative_samples[positive_samples] = 0
-			distance = CosineSimilarity()
-			pos_sim = distance(x[anchor].unsqueeze(0), x[positive_samples])
-			all_sim = distance(x[anchor].unsqueeze(0), x[sampled_nodes])
+			dis = CosineSimilarity()
+			pos_sim = dis(x[anchor].unsqueeze(0), x[positive_samples])
+			neg_sim = dis(x[anchor].unsqueeze(0), x[negative_samples])
 			numerator = torch.sum(torch.exp(pos_sim/config['temp']))
-			denominator = torch.sum(torch.exp(all_sim/config['temp'])) + torch.finfo(numerator.dtype).tiny
+			denominator = torch.sum(torch.exp(neg_sim/config['temp'])) + numerator
 			# normalize by number of positive samples per anchor according to formula
 			pos_total_samples = positive_samples.shape[0]
 			if pos_total_samples == 0:

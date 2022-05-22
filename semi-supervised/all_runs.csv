@@ -4,4 +4,9 @@ id, ways-shots-unlab, dataset-split, n_episodes, batch_size
 <built-in function id>,1-1-1,COCO-1,2500,1,YesYesYes
 <built-in function id>,1-1-1,COCO-1,2500,1,Yes
 <built-in function id>,1-1-1,COCO-2,2500,1,Yes
-<built-in function id>,1-1-1,COCO-3,2500,1,
+<built-in function id>,1-1-1,COCO-3,2500,1,Yes
+<built-in function id>,1-1-6,COCO-0,2500,1,
+<built-in function id>,1-1-6,COCO-0,2500,1,
+<built-in function id>,1-1-6,COCO-0,2500,1,
+<built-in function id>,1-1-6,COCO-0,2500,1,
+<built-in function id>,1-1-6,COCO-0,2500,1,

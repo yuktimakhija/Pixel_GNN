@@ -10,7 +10,7 @@ config = {
 	"shot": 1,
 	"ways": 1,
 	"n_queries": 1,
-	"unlabelled": 1,
+	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
 
@@ -23,11 +23,18 @@ config = {
 
 	# CL variables
 	"num_anchors": 1000,
-	"num_samples": 1000,
+	"num_samples": 2112,
 	"temp": 0.1,
 	"unsup_weight": 0.5,
 	"batch_size": 1,
 	"n_episodes": 2500,
+
+	# Supervised CL variables 
+	"num_positives": 64 ,
+	"num_negatives": 2048, 
+
+	# Unsupervised CL variables
+	"unsup_anchors": 8192,
 
 	# Medical Dataset paths
 	"bcv_path": "",

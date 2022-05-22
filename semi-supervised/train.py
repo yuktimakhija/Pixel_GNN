@@ -19,11 +19,11 @@ def augment(unsup_graph):
 	aug1 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
 					A.FeatureMasking(pf=0.1),
 					A.EdgeRemoving(pe=0.1)],
-					num_choices=1)
+					num_choices=2)
 	aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
 					A.FeatureMasking(pf=0.1),
 					A.EdgeRemoving(pe=0.1)],
-					num_choices=1)
+					num_choices=2)
 	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
 	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
@@ -89,7 +89,7 @@ run_dict['last_run'] = run
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 master = open('all_runs.csv', 'a')
-master.write(f"\n{id},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
+master.write(f"\n{run},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
 master.close()
 
 print("Encoder Params",count_parameters(GNN_Encoder))
@@ -98,7 +98,7 @@ print("Decoder Params",count_parameters(GNN_Decoder))
 # for episode in tqdm(range(n_episodes)):
 	# tqdm.write(f'Episode {episode}')
 for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), total=n_episodes):
-	print(sup_graph.x.min(), sup_graph.x.max())
+	# print(sup_graph.x.min(), sup_graph.x.max())
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
 	encoder_optimizer.zero_grad()
 	decoder_optimizer.zero_grad()
@@ -115,7 +115,7 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# ?
 	# call the loss function on task graph augs (query??) and obtain contrastive loss
 	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
-	selected_anchors = rng.integers(low=0, high=unsup_embs1[0].shape[0], size=config['num_anchors'])
+	selected_anchors = rng.integers(low=0, high=unsup_embs1[0].shape[0], size=config['unsup_anchors']*config['unlabelled'])
 	unsup_CL = unsupCL_fn(unsup_embs1[0][selected_anchors], unsup_embs2[0][selected_anchors])
 	contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 	episode_losses[0] += contrastive_loss.item()
