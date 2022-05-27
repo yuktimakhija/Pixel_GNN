@@ -1,0 +1,9 @@
+run_id_to_test,dataset-split,ways-shots-unlabelled,mean mIOU,std mIOU
+28,COCO-0,1-5-1,tensor(0.4150),tensor(0.0893)
+29,COCO-0,1-1-1,tensor(0.4161),tensor(0.0896)
+35,COCO-1,1-5-1,tensor(0.4541),tensor(0.0663)
+30,COCO-1,1-1-1,tensor(0.4564),tensor(0.0646)
+32,COCO-3,1-1-1,tensor(0.4134),tensor(0.1059)
+48,COCO-2,1-1-1,tensor(0.4326),tensor(0.0902)
+46,COCO-0,1-5-6,tensor(0.4145),tensor(0.0901)
+51,COCO-0,1-1-6,tensor(0.4150),tensor(0.0883)

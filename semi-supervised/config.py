@@ -6,13 +6,16 @@ config = {
 	"test_dataset": "",
 	"lists_path": "../lists",
 
-	"mode": "train", # or test/val
-	"shot": 1,
-	"ways": 1,
+	"mode": "train", # train or val
+	"run_id_to_test": 51,
 	"n_queries": 1,
+	"ways": 1,
+	"shot": 5,
 	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {
+	"batch_size": 1,
+	"n_episodes": 4000,
 
 	# },
 	"num_neighbors": 1,
@@ -26,15 +29,13 @@ config = {
 	"num_samples": 2112,
 	"temp": 0.1,
 	"unsup_weight": 0.5,
-	"batch_size": 1,
-	"n_episodes": 2500,
 
 	# Supervised CL variables 
 	"num_positives": 64 ,
 	"num_negatives": 2048, 
 
 	# Unsupervised CL variables
-	"unsup_anchors": 8192,
+	"unsup_anchors": 2048,
 
 	# Medical Dataset paths
 	"bcv_path": "",

@@ -1,12 +1,17 @@
-id, ways-shots-unlab, dataset-split, n_episodes, batch_size
-<built-in function id>,1-1-6,COCO-0,2500,1,
-<built-in function id>,1-1-1,COCO-0,2500,1,
-<built-in function id>,1-1-1,COCO-1,2500,1,YesYesYes
-<built-in function id>,1-1-1,COCO-1,2500,1,Yes
-<built-in function id>,1-1-1,COCO-2,2500,1,Yes
-<built-in function id>,1-1-1,COCO-3,2500,1,Yes
-<built-in function id>,1-1-6,COCO-0,2500,1,
-<built-in function id>,1-1-6,COCO-0,2500,1,
-<built-in function id>,1-1-6,COCO-0,2500,1,
-<built-in function id>,1-1-6,COCO-0,2500,1,
-<built-in function id>,1-1-6,COCO-0,2500,1,
+id,ways-shots-unlab,dataset-split,n_episodes,batch_size,Completed?
+9,1-1-6,COCO-0,2500.0,1.0,Yes
+10,1-1-1,COCO-0,2500.0,1.0,Yes
+11,1-1-1,COCO-1,2500.0,1.0,Yes
+12,1-1-1,COCO-1,2500.0,1.0,Yes
+13,1-1-1,COCO-2,2500.0,1.0,Yes
+14,1-1-1,COCO-3,2500.0,1.0,Yes
+28,1-5-1,COCO-0,2500.0,1.0,Yes
+29,1-1-1,COCO-0,4000.0,1.0,Yes
+30,1-1-1,COCO-1,4000.0,1.0,Yes
+31,1-1-1,COCO-2,4000.0,1.0,
+32,1-1-1,COCO-3,4000.0,1.0,Yes
+33,1-5-1,COCO-1,4000.0,1.0,
+35,1-5-1,COCO-1,2500.0,1.0,Yes
+46,1-5-6,COCO-0,4000.0,1.0,Yes
+51,1-1-6,COCO-0,4000.0,1.0,Yes
+52,1-5-6,COCO-0,4000.0,1.0,No

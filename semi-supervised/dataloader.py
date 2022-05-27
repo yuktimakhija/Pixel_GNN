@@ -50,8 +50,10 @@ class GeneralDataLoader(Dataset):
 				make_dataset(self.split, self.path, sup_data_list, unsup_data_list, self.training_classes)
 			assert len(self.sub_class_file_list.keys()) == len(self.training_classes)
 		elif self.mode == 'val':
+			# print(self.testing_classes)
 			self.sup_data_list, self.sub_class_file_list, self.unsup_data_list =\
-				make_dataset(self.split, self.path, sup_data_list, unsup_data_list, self.testing_classes)
+				make_dataset(self.split, self.path, sup_data_list, unsup_data_list, self.testing_classes, 'val')
+			# print(len(self.sub_class_file_list.keys()), len(self.sub_class_file_list.keys()))
 			assert len(self.sub_class_file_list.keys()) == len(self.testing_classes) 
 
 	def __len__(self):
@@ -68,7 +70,7 @@ class GeneralDataLoader(Dataset):
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
 		img = np.float32(img)
 		label = cv2.imread(lblpath, cv2.IMREAD_GRAYSCALE)
-
+		print()
 		if img.shape[0] != label.shape[0] or img.shape[1] != label.shape[1]:
 			raise (RuntimeError("Query Image & label shape mismatch: " + imgpath + " " + lblpath + "\n"))          
 		label_classes = np.unique(label).tolist()
@@ -108,6 +110,13 @@ class GeneralDataLoader(Dataset):
 		support_image_path_list = []
 		support_label_path_list = []
 		# support_idx_list = []
+		
+		# sometimes a class can have less than {shot} images in testing. because we are taking only 20% labelled data
+		# cyctr (original code) didnt face this problem
+		if self.mode=='val' and len(file_class_chosen) < self.shot + config['n_queries']:
+			print(f"Class {class_chosen} has only {len(file_class_chosen)} images but {self.shot} shots and {config['n_queries']} queries are required")
+			print('Skipping.')
+			return -1,-1,-1,-1,-1,-1
 		
 		# Choose support images randomly of the same class
 		support_img_lbl_pairs = self.rng.choice(file_class_chosen, self.shot, replace=False)
@@ -195,12 +204,14 @@ class GeneralDataLoader(Dataset):
 			return q_index, sup_index, sup_graph, unsup_graph, task_graph, p_label(label).reshape(-1)
 
 
-def make_dataset(split, path, data_list, unsup_data_list, training_classes):
+def make_dataset(split, path, data_list, unsup_data_list, training_classes, mode='train'):
 	assert split in [0, 1, 2, 3, 10, 11, 999]
 	if not os.path.isfile(data_list):
 		raise (RuntimeError("Image list file do not exist: " + data_list + "\n"))
-
-	split_data_list = data_list.split('.')[0] + '_split{}'.format(split) + '.pth'
+	# print(training_classes)
+	split_data_list = 'coco_preprocd/' + '_split{}'.format(split) + '.pth'
+	if mode == 'val':
+		split_data_list = 'coco_preprocd/' + '_split{}_val'.format(split) + '.pth'
 	if os.path.isfile(split_data_list):
 		image_label_list, sub_class_file_list, unsup_image_list = torch.load(split_data_list)
 		return image_label_list, sub_class_file_list, unsup_image_list

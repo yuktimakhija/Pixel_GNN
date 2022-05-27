@@ -32,6 +32,8 @@ class Node2NodeSupConLoss(nn.Module):
 		# return True
 
 	def forward(self, x, y):
+		assert x.shape[:-1] == y.shape
+		# print(x.shape)
 		# x = torch.cat([graph['x'] for graph in graphs])
 		# y = torch.cat([graph['y'] for graph in graphs])
 		# x = sup_graph.x
@@ -43,8 +45,9 @@ class Node2NodeSupConLoss(nn.Module):
 		# pos_loss, neg_loss = 0,0
 		size_negative = config['num_negatives']*config['ways']*config['shot']
 		size_positive = config['num_positives']*config['ways']*config['shot']
+		num_sup_anchors = config['num_anchors']*config['ways']*config['shot']
 		# randomly sample anchors from all graphs
-		selected_anchors = rng.integers(low=0, high=n, size=config['num_anchors'])
+		selected_anchors = rng.integers(low=0, high=n, size=num_sup_anchors)
 		# do we check_valid here?
 
 		total_loss = 0
@@ -53,12 +56,16 @@ class Node2NodeSupConLoss(nn.Module):
 			# while the sample is not valid, sample again.
 			# while(not self.check_valid(y, sampled_nodes)):
 			# 	sampled_nodes = rng.integers(low=0, high=n, size=config['num_samples'])
-			positives = torch.where(y[:] == y[anchor])[0]
+			# print(anchor)
+			# print(y.shape)
+			# print(y[anchor])
+			# print(torch.where(y==y[anchor]))
+			positives = torch.where(y == y[anchor])[0]
 			positive_indices = rng.integers(low=0, high=len(positives), size=size_positive)
 			positive_samples = positives[positive_indices]
-			negatives = torch.where(y[:] != y[anchor])[0]
+			negatives = torch.where(y != y[anchor])[0]
 			negative_indices = rng.integers(low=0, high=len(negatives), size=size_negative)
-			negative_samples = positives[negative_indices]
+			negative_samples = negatives[negative_indices]
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0
 			# negative_samples = torch.ones_like(positive_samples)
 			# negative_samples[positive_samples] = 0
@@ -85,3 +92,17 @@ class Node2NodeSupConLoss(nn.Module):
 
 # 	def forward(self, x, y):
 # 		return self.CE_fn(x, y)
+
+def intersectionAndUnionGPU(output, target, K, ignore_index=255):
+    # 'K' classes, output and target sizes are N or N * L or N * H * W, each value in range 0 to K - 1.
+    assert (output.dim() in [1, 2, 3])
+    assert output.shape == target.shape
+    output = output.view(-1)
+    target = target.view(-1)
+    output[target == ignore_index] = ignore_index
+    intersection = output[output == target]
+    area_intersection = torch.histc(intersection, bins=K, min=0, max=K-1)
+    area_output = torch.histc(output, bins=K, min=0, max=K-1)
+    area_target = torch.histc(target, bins=K, min=0, max=K-1)
+    area_union = area_output + area_target - area_intersection
+    return area_intersection, area_union, area_target
