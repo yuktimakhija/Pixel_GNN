@@ -14,18 +14,20 @@ import json
 rng = np.random.default_rng()
 from torch_geometric.profile import count_parameters
 import os, sys
+import pandas as pd
+from torch_geometric import utils
 
-def augment(unsup_graph):
-	aug1 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
-					A.FeatureMasking(pf=0.1),
-					A.EdgeRemoving(pe=0.1)],
-					num_choices=1)
-	aug2 = A.RandomChoice([A.RWSampling(num_seeds=1000, walk_length=10),
-					A.FeatureMasking(pf=0.1),
-					A.EdgeRemoving(pe=0.1)],
-					num_choices=1)
-	x1, edges1, edge_weights1 = aug1(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
-	x2, edges2, edge_weights2 = aug2(unsup_graph['x'], unsup_graph['edge_index'], unsup_graph['edge_attr'])
+def augment(x, edge_index, edge_attr):
+	aug1 = A.RandomChoice([A.FeatureMasking(pf=0.2),
+					A.NodeDropping(pn=0.2),
+					A.EdgeRemoving(pe=0.2)],
+					num_choices=2)
+	aug2 = A.RandomChoice([A.FeatureMasking(pf=0.2),
+					A.NodeDropping(pn=0.2),
+					A.EdgeRemoving(pe=0.2)],
+					num_choices=2)
+	x1, edges1, edge_weights1 = aug1(x, edge_index, edge_attr)
+	x2, edges2, edge_weights2 = aug2(x, edge_index, edge_attr)
 	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
 
 device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
@@ -40,7 +42,8 @@ if dataset in ['BCV', 'CT_ORG', 'DECATHLON']:
 	dataset_type = 'medical'
 
 emb_dim = config['embedding_dim']
-num_classes = config['classes'][dataset]
+# num_classes = config['classes'][dataset]
+num_classes = config['ways'] + 1
 GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
 GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 
@@ -49,10 +52,14 @@ unsupCL_fn = contraster = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']),
 unsup_weight = config['unsup_weight']
 # loss_fn = loss.QueryClassificationLoss()
 loss_fn = torch.nn.CrossEntropyLoss()
-encoder_optimizer = torch.optim.Adam(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
-decoder_optimizer = torch.optim.Adam(GNN_Decoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+# encoder_optimizer = torch.optim.Adadelta(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+# decoder_optimizer = torch.optim.Adadelta(GNN_Decoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+encoder_optimizer = torch.optim.SGD(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
+decoder_optimizer = torch.optim.SGD(GNN_Decoder.parameters(), lr=1e-3, momentum=0.9, weight_decay=5e-4)
+e_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(encoder_optimizer, milestones=[1000,2000,3000], gamma=0.1)
+d_lr_scheduler = torch.optim.lr_scheduler.MultiStepLR(decoder_optimizer, milestones=[1000,2000,3000], gamma=0.1)
 
-if len(sys.argv)>0:
+if len(sys.argv)>1:
 	split = int(sys.argv[1])
 else:
 	split = config['split']
@@ -75,24 +82,34 @@ GNN_Decoder.train()
 run_dict = json.load(open('runs.json'))
 run = run_dict['last_run'] + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
-starttime = time.time()
 
 dirname = f"./weights/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 os.makedirs(dirname, exist_ok=True)
 
 outfile = open(dirname+f'summary_split{split}.txt', 'w')
+outcsv = open(dirname+f'summary_split{split}.csv', 'w')
+outcsv.write('Episode, CL, SupCL, UnsupCL, ClassificationLoss\n')
 json.dump(config, open(dirname+f'config_split{split}.json', 'w'), indent=4)
 run_dict['list'][run] = dirname # updating run number
 run_dict['last_run'] = run
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
+
+master = pd.read_csv('all_runs.csv', index_col=[0])
+master.loc[run] = [f"{config['ways']}-{config['shot']}-{config['unlabelled']}", f"{dataset}-{split}", n_episodes, batch_size, 'No']
+master.to_csv('all_runs.csv')
+
+# master.write(f"\n{run},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
+# master.close() 
+# this line was causing desync issues (like YesYesYes appearing in the csv when multiple models are run together)
+
 print("Encoder Params",count_parameters(GNN_Encoder))
 print("Decoder Params",count_parameters(GNN_Decoder))
+starttime = time.time()
 # iterate over dataloader and get a batch
 # for episode in tqdm(range(n_episodes)):
 	# tqdm.write(f'Episode {episode}')
 for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm(enumerate(trainloader), total=n_episodes):
-	if i > n_episodes:
-		break
+	# print(sup_graph.x.min(), sup_graph.x.max())
 	episode_losses = [0,0,0,0,0] # CL, supCL, unsupCL, nodeClassification, only query nodeClossification
 	encoder_optimizer.zero_grad()
 	decoder_optimizer.zero_grad()
@@ -102,15 +119,17 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# pass all through GNN_Encoder and get embeddings
 	# q_embs = GNN_Encoder(q_graph)
 	sup_embs = GNN_Encoder(sup_graph)
-	unsup_graph_aug1, unsup_graph_aug2 = augment(unsup_graph)
+	selected_anchors = rng.integers(low=0, high=unsup_graph.x.shape[0], size=config['unsup_anchors']*config['unlabelled'])
+	# take the subgraph (the function returns edge_index and edge_attr)
+	sub_e, sub_ew = utils.subgraph(torch.tensor(selected_anchors), unsup_graph.edge_index, unsup_graph.edge_attr, relabel_nodes=True)
+	unsup_graph_aug1, unsup_graph_aug2 = augment(unsup_graph.x[selected_anchors], sub_e, sub_ew)
 	unsup_embs1 = GNN_Encoder(unsup_graph_aug1)
 	unsup_embs2 = GNN_Encoder(unsup_graph_aug2)
 	# once embeddings are here, make projection heads from a simple MLP?
 	# ?
 	# call the loss function on task graph augs (query??) and obtain contrastive loss
 	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
-	selected_anchors = rng.integers(low=0, high=unsup_embs1[0].shape[0], size=config['num_anchors'])
-	unsup_CL = unsupCL_fn(unsup_embs1[0][selected_anchors], unsup_embs2[0][selected_anchors])
+	unsup_CL = unsupCL_fn(unsup_embs1[0], unsup_embs2[0])
 	contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 	episode_losses[0] += contrastive_loss.item()
 	episode_losses[1] += sup_CL.item()
@@ -118,6 +137,7 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# backprop through optimizer
 	contrastive_loss.backward()
 	encoder_optimizer.step()
+	e_lr_scheduler.step()
 	# phase 2: node classification
 	# GNN_Encoder.no_grad()
 	# get embeddings for task graphs and query graphs (all batches/parallel)
@@ -156,18 +176,29 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	episode_losses[3] += loss.item()
 	loss.backward()
 	decoder_optimizer.step()
+	d_lr_scheduler.step()
 	# q_loss = loss_fn(task_embs[0][q_calcd].unsqueeze(0), q_label.to(device))
 	# episode_losses[4] += q_loss.item()
 	# task ends
 
 	if i/n_episodes in [0.25,0.5,0.75,1.0]:
-		torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{config["split"]}_{i/n_episodes}%.pt')
-		torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{config["split"]}_{i/n_episodes}%.pt')
-
+		torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{split}_{i/n_episodes}%.pt')
+		torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{split}_{i/n_episodes}%.pt')
 	tqdm.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
 	tqdm.write(f'Classification Loss:{episode_losses[3]}')
-	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})')
-	outfile.write(f'Classification Loss:{episode_losses[3]}')
+	outfile.write(f'Episode {i} complete, CL:{episode_losses[0]}\t(S:{episode_losses[1]},\tU:{episode_losses[2]})\n')
+	outfile.write(f'Classification Loss:{episode_losses[3]}\n')
+	outcsv.write(f'{i},{episode_losses[0]},{episode_losses[1]},{episode_losses[2]},{episode_losses[3]}\n')
+	if i+1 > n_episodes:
+		break
+
+torch.save(GNN_Encoder.state_dict(), dirname+f'enc_split{split}_final.pt')
+torch.save(GNN_Decoder.state_dict(), dirname+f'dec_split{split}_final.pt')
+
+# master = pd.read_csv('all_runs.csv', index_cols=[0])
+master.loc[run, 'Completed?'] = "Yes"
+master.to_csv('all_runs.csv')
+# master.close()
 
 print(f'PixelGNN training on {dataset} finished. Run {run} ended at {time.strftime("%H:%M:%S")}')
 endtime = time.time()

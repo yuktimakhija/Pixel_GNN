@@ -6,11 +6,11 @@ config = {
 	"test_dataset": "",
 	"lists_path": "../lists",
 
-	"mode": "val", # train or val
+	"mode": "train", # train or val
 	"run_id_to_test": 52,
 	"n_queries": 1,
 	"ways": 1,
-	"shot": 5,
+	"shot": 1,
 	"unlabelled": 6,
 	"model_name": "Custom", # GCN, GAT, GCN2, GraphConv, GIN
 	# "model_params": {

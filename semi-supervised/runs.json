@@ -1,5 +1,5 @@
 {
-    "last_run": 52,
+    "last_run": 54,
     "list": {
         "9": "./weights/COCO/1way_1shot/9/",
         "10": "./weights/COCO/1way_1shot/10/",
@@ -16,6 +16,8 @@
         "35": "./weights/COCO/1way_5shot/35/",
         "46": "./weights/COCO/1way_5shot/46/",
         "51": "./weights/COCO/1way_1shot/51/",
-        "52": "./weights/COCO/1way_5shot/52/"
+        "52": "./weights/COCO/1way_5shot/52/",
+        "53": "./weights/COCO/1way_1shot/53/",
+        "54": "./weights/COCO/1way_1shot/54/"
     }
 }

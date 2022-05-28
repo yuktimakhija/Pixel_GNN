@@ -15,3 +15,5 @@ id,ways-shots-unlab,dataset-split,n_episodes,batch_size,Completed?
 46,1-5-6,COCO-0,4000.0,1.0,Yes
 51,1-1-6,COCO-0,4000.0,1.0,Yes
 52,1-5-6,COCO-0,4000.0,1.0,Yes
+53,1-1-6,COCO-1,4000.0,1.0,No
+54,1-1-6,COCO-0,4000.0,1.0,No
