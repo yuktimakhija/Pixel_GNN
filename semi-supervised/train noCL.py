@@ -1,4 +1,4 @@
-	from config import config
+from config import config
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -17,7 +17,6 @@ import os, sys
 import pandas as pd
 from torch_geometric import utils
 
-
 device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
 dataset = config['dataset']
@@ -34,8 +33,6 @@ emb_dim = config['embedding_dim']
 num_classes = config['ways'] + 1
 GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
 GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
-
-supCL_fn = loss.Node2NodeSupConLoss()
 
 # loss_fn = loss.QueryClassificationLoss()
 loss_fn = torch.nn.CrossEntropyLoss()
@@ -66,7 +63,7 @@ run_dict = json.load(open('runs.json'))
 run = run_dict['last_run'] + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 
-dirname = f"./weights_supCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
+dirname = f"./weights_noCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 os.makedirs(dirname, exist_ok=True)
 
 outfile = open(dirname+f'summary_split{split}.txt', 'w')
@@ -78,7 +75,7 @@ run_dict['last_run'] = run
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 master = pd.read_csv('all_runs.csv', index_col=[0])
-master.loc[run] = [f"only_supCL-{config['ways']}-{config['shot']}-{config['unlabelled']}", f"{dataset}-{split}", n_episodes, batch_size, 'No']
+master.loc[run] = [f"no_CL-{config['ways']}-{config['shot']}-{config['unlabelled']}", f"{dataset}-{split}", n_episodes, batch_size, 'No']
 master.to_csv('all_runs.csv')
 
 # master.write(f"\n{run},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
@@ -101,23 +98,10 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# make augmentations from images (are they needed if we are sampling)
 	# pass all through GNN_Encoder and get embeddings
 	# q_embs = GNN_Encoder(q_graph)
-	sup_embs = GNN_Encoder(sup_graph)
-	
-	# once embeddings are here, make projection heads from a simple MLP?
-	# ?
-	# call the loss function on task graph augs (query??) and obtain contrastive loss
-	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
-	contrastive_loss = sup_CL 
-	episode_losses[0] += contrastive_loss.item()
-	episode_losses[1] += sup_CL.item()
-	# backprop through optimizer
-	contrastive_loss.backward()
-	encoder_optimizer.step()
 	# phase 2: node classification
 	# GNN_Encoder.no_grad()
 	# get embeddings for task graphs and query graphs (all batches/parallel)
-	with torch.no_grad():
-		task_embs = GNN_Encoder(task_graph)
+	task_embs = GNN_Encoder(task_graph)
 	task_embs_d = Data(x=task_embs[0].detach(), edge_index=task_embs[1][0].detach(), edge_attr=task_embs[1][1].detach())
 	task_embs = GNN_Decoder(task_embs_d)
 	# sup_index += q_index
@@ -150,6 +134,7 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	loss = loss_fn(task_embs[0][calcd_indices], loss_labels)
 	episode_losses[3] += loss.item()
 	loss.backward()
+	encoder_optimizer.step()
 	decoder_optimizer.step()
 	# q_loss = loss_fn(task_embs[0][q_calcd].unsqueeze(0), q_label.to(device))
 	# episode_losses[4] += q_loss.item()

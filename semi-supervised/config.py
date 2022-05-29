@@ -6,8 +6,8 @@ config = {
 	"test_dataset": "",
 	"lists_path": "../lists",
 
-	"mode": "train", # train or val
-	"run_id_to_test": 52,
+	"mode": "val", # train or val
+	"run_id_to_test": 56,
 	"n_queries": 1,
 	"ways": 1,
 	"shot": 1,

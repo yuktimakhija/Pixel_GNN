@@ -60,9 +60,12 @@ class Node2NodeSupConLoss(nn.Module):
 			# print(y[anchor])
 			# print(torch.where(y==y[anchor]))
 			positives = torch.where(y == y[anchor])[0]
+			negatives = torch.where(y != y[anchor])[0]
+			if len(positives)<size_positive or len(negatives)<size_negative:
+				print(f"Problem in image, positives:{len(positives)}, negatives:{len(negatives)}")
+				continue
 			positive_indices = rng.integers(low=0, high=len(positives), size=size_positive)
 			positive_samples = positives[positive_indices]
-			negatives = torch.where(y != y[anchor])[0]
 			negative_indices = rng.integers(low=0, high=len(negatives), size=size_negative)
 			negative_samples = negatives[negative_indices]
 			# make the negative_samples indices by making an array of ones and set the positive_samples to 0

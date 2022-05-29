@@ -48,7 +48,7 @@ GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
 GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 
 supCL_fn = loss.Node2NodeSupConLoss()
-unsupCL_fn = contraster = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']), mode='L2L', intraview_negs=True).to(device)
+unsupCL_fn = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']), mode='L2L', intraview_negs=True).to(device)
 unsup_weight = config['unsup_weight']
 # loss_fn = loss.QueryClassificationLoss()
 loss_fn = torch.nn.CrossEntropyLoss()

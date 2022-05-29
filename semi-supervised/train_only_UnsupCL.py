@@ -1,4 +1,4 @@
-	from config import config
+from config import config
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -17,6 +17,18 @@ import os, sys
 import pandas as pd
 from torch_geometric import utils
 
+def augment(x, edge_index, edge_attr):
+	aug1 = A.RandomChoice([A.FeatureMasking(pf=0.2),
+					A.NodeDropping(pn=0.2),
+					A.EdgeRemoving(pe=0.2)],
+					num_choices=2)
+	aug2 = A.RandomChoice([A.FeatureMasking(pf=0.2),
+					A.NodeDropping(pn=0.2),
+					A.EdgeRemoving(pe=0.2)],
+					num_choices=2)
+	x1, edges1, edge_weights1 = aug1(x, edge_index, edge_attr)
+	x2, edges2, edge_weights2 = aug2(x, edge_index, edge_attr)
+	return Data(x=x1, edge_index=edges1, edge_attr=edge_weights1), Data(x=x2, edge_index=edges2, edge_attr=edge_weights2)
 
 device = torch.device('cuda:0'if torch.cuda.is_available() else "cpu")
 
@@ -35,8 +47,8 @@ num_classes = config['ways'] + 1
 GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
 GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 
-supCL_fn = loss.Node2NodeSupConLoss()
-
+unsup_weight = config['unsup_weight']
+unsupCL_fn = DualBranchContrast(loss=L.InfoNCE(tau=config['temp']), mode='L2L', intraview_negs=True).to(device)
 # loss_fn = loss.QueryClassificationLoss()
 loss_fn = torch.nn.CrossEntropyLoss()
 encoder_optimizer = torch.optim.Adadelta(GNN_Encoder.parameters(), lr=config['init_lr'], weight_decay=config['weight_decay'])
@@ -66,7 +78,7 @@ run_dict = json.load(open('runs.json'))
 run = run_dict['last_run'] + 1
 print(f'PixelGNN on {dataset}. Run {run} started at {time.strftime("%H:%M:%S")}')
 
-dirname = f"./weights_supCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
+dirname = f"./weights_unsupCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run}/"
 os.makedirs(dirname, exist_ok=True)
 
 outfile = open(dirname+f'summary_split{split}.txt', 'w')
@@ -78,7 +90,7 @@ run_dict['last_run'] = run
 json.dump(run_dict, open('runs.json', 'w'), indent=4)
 
 master = pd.read_csv('all_runs.csv', index_col=[0])
-master.loc[run] = [f"only_supCL-{config['ways']}-{config['shot']}-{config['unlabelled']}", f"{dataset}-{split}", n_episodes, batch_size, 'No']
+master.loc[run] = [f"only-_unsupCL-{config['ways']}-{config['shot']}-{config['unlabelled']}", f"{dataset}-{split}", n_episodes, batch_size, 'No']
 master.to_csv('all_runs.csv')
 
 # master.write(f"\n{run},{config['ways']}-{config['shot']}-{config['unlabelled']},{dataset}-{split},{n_episodes},{batch_size},")
@@ -101,15 +113,19 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# make augmentations from images (are they needed if we are sampling)
 	# pass all through GNN_Encoder and get embeddings
 	# q_embs = GNN_Encoder(q_graph)
-	sup_embs = GNN_Encoder(sup_graph)
-	
+	selected_anchors = rng.integers(low=0, high=unsup_graph.x.shape[0], size=config['unsup_anchors']*config['unlabelled'])
+	# take the subgraph (the function returns edge_index and edge_attr)
+	sub_e, sub_ew = utils.subgraph(torch.tensor(selected_anchors), unsup_graph.edge_index, unsup_graph.edge_attr, relabel_nodes=True)
+	unsup_graph_aug1, unsup_graph_aug2 = augment(unsup_graph.x[selected_anchors], sub_e, sub_ew)
+	unsup_embs1 = GNN_Encoder(unsup_graph_aug1)
+	unsup_embs2 = GNN_Encoder(unsup_graph_aug2)
 	# once embeddings are here, make projection heads from a simple MLP?
 	# ?
 	# call the loss function on task graph augs (query??) and obtain contrastive loss
-	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
-	contrastive_loss = sup_CL 
+	unsup_CL = unsupCL_fn(unsup_embs1[0], unsup_embs2[0])
+	contrastive_loss = unsup_CL
 	episode_losses[0] += contrastive_loss.item()
-	episode_losses[1] += sup_CL.item()
+	episode_losses[2] += unsup_CL.item()
 	# backprop through optimizer
 	contrastive_loss.backward()
 	encoder_optimizer.step()

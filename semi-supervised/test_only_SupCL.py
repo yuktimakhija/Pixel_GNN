@@ -46,7 +46,7 @@ if dataset_type == 'general':
 												drop_last=True) 
 
 run_to_test = config['run_id_to_test']
-dirname = f"./weights_unsupCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run_to_test}/"
+dirname = f"./weights_supCL/{dataset}/{config['ways']}way_{config['shot']}shot/{run_to_test}/"
 enc_path = dirname+f'enc_split{split}_final.pt'
 dec_path = dirname+f'dec_split{split}_final.pt'
 GNN_Encoder.load_state_dict(torch.load(enc_path))
@@ -90,7 +90,7 @@ mean_miou = total_miou.mean()
 std_miou = total_miou.std()
 
 all_results = pd.read_csv('all_results.csv',index_col=[0])
-all_results.loc[run_to_test] = [f"{dataset}-{split}", f"{config['ways']}-{config['shot']}-{config['unlabelled']}", mean_miou, std_miou]
+all_results.loc[run_to_test] = [f"{dataset}-{split}", f"only_supCL-{config['ways']}-{config['shot']}-{config['unlabelled']}", mean_miou, std_miou]
 all_results.to_csv('all_results.csv')
 
 results_file.write(f"Results on run {run_to_test}(split{split})[N={config['ways']},K={config['shot']},M={config['unlabelled']}]:\n")
