@@ -33,3 +33,11 @@ Node and edge features are the same as before.
 Connections:
 1) Query to query: 4-connected with dilation 
 2) Query to support: random
+
+### References
+1. [Few-Shot Segmentation via Cycle-Consistent Transformer (CyCTR)](https://proceedings.neurips.cc/paper/2021/file/b8b12f949378552c21f28deff8ba8eb6-Paper.pdf), NeurIPS 2021, Zhang G. et al.
+2. [Few-shot learning with GNNs](https://openreview.net/pdf?id=BJj6qGbRW), ICLR 2018, Garcia V. et al.
+3. [InfoGCL: Information-Aware Graph Contrastive Learning](https://proceedings.neurips.cc/paper/2021/hash/ff1e68e74c6b16a1a7b5d958b95e120c-Abstract.html), NeurIPS 2021, Xu D. et al.
+4. [Part-aware Prototype Network for Few-shot Semantic Segmentation](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123540137.pdf), ECCV 2020, Liu Y. et al.
+5. [Uncertainty-Aware Semi-Supervised Few Shot Segmentation](https://arxiv.org/abs/2110.08954), arXiv, Kim S. et al., 2021.
+6. [Pyramid Graph Networks with Connection Attentions for Region-Based One-Shot Semantic Segmentation](https://openaccess.thecvf.com/content_ICCV_2019/papers/Zhang_Pyramid_Graph_Networks_With_Connection_Attentions_for_Region-Based_One-Shot_Semantic_ICCV_2019_paper.pdf), ICCV 2019, Zhang C. et al.
