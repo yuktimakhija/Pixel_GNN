@@ -46,8 +46,20 @@ class Node2NodeSupConLoss(nn.Module):
 		size_positive = config['num_positives']*config['ways']*config['shot']
 		num_sup_anchors = config['num_anchors']*config['ways']*config['shot']
 		# randomly sample anchors from all graphs
-		selected_anchors = rng.integers(low=0, high=n, size=num_sup_anchors)
+
+		# using all foreground pixels as anchors
+		selected_anchors = torch.where(y == 1)[0]
+		# for sampling from anchors
+		if len(selected_anchors) > num_sup_anchors:
+			sampled_anchors = rng.integers(low=0, high=len(selected_anchors), size=num_sup_anchors)
+			selected_anchors = selected_anchors[sampled_anchors]
+
 		# do we check_valid here?
+		positives = torch.where(y == 1)[0]
+		negatives = torch.where(y != 1)[0]
+		if len(positives)==0	 or len(negatives)==0:
+			print(f"Problem in image, positives:{len(positives)}, negatives:{len(negatives)}")
+			return "invalid"
 
 		total_loss = 0
 		for anchor in selected_anchors:
@@ -59,11 +71,6 @@ class Node2NodeSupConLoss(nn.Module):
 			# print(y.shape)
 			# print(y[anchor])
 			# print(torch.where(y==y[anchor]))
-			positives = torch.where(y == y[anchor])[0]
-			negatives = torch.where(y != y[anchor])[0]
-			if len(positives)<size_positive or len(negatives)<size_negative:
-				print(f"Problem in image, positives:{len(positives)}, negatives:{len(negatives)}")
-				continue
 			positive_indices = rng.integers(low=0, high=len(positives), size=size_positive)
 			positive_samples = positives[positive_indices]
 			negative_indices = rng.integers(low=0, high=len(negatives), size=size_negative)

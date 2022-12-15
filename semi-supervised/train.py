@@ -43,7 +43,7 @@ if dataset in ['BCV', 'CT_ORG', 'DECATHLON']:
 
 emb_dim = config['embedding_dim']
 # num_classes = config['classes'][dataset]
-num_classes = config['ways'] + 1
+num_classes = config['ways']+1
 GNN_Encoder = GNN_Encoder(img_dim, emb_dim).to(device)
 GNN_Decoder = GNN_Decoder(emb_dim, num_classes).to(device)
 
@@ -125,6 +125,8 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# ?
 	# call the loss function on task graph augs (query??) and obtain contrastive loss
 	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
+	if sup_CL == 'invalid':
+		continue
 	unsup_CL = unsupCL_fn(unsup_embs1[0], unsup_embs2[0])
 	contrastive_loss = (1-unsup_weight)*sup_CL + unsup_weight*unsup_CL
 	episode_losses[0] += contrastive_loss.item()

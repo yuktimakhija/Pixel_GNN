@@ -70,7 +70,7 @@ class GeneralDataLoader(Dataset):
 		img = cv2.cvtColor(cv2.imread(imgpath, cv2.IMREAD_COLOR), cv2.COLOR_BGR2RGB) 
 		img = np.float32(img)
 		label = cv2.imread(lblpath, cv2.IMREAD_GRAYSCALE)
-		print()
+		# print()
 		if img.shape[0] != label.shape[0] or img.shape[1] != label.shape[1]:
 			raise (RuntimeError("Query Image & label shape mismatch: " + imgpath + " " + lblpath + "\n"))          
 		label_classes = np.unique(label).tolist()

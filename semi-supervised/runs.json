@@ -1,5 +1,5 @@
 {
-    "last_run": 56,
+    "last_run": 78,
     "list": {
         "9": "./weights/COCO/1way_1shot/9/",
         "10": "./weights/COCO/1way_1shot/10/",
@@ -20,6 +20,28 @@
         "53": "./weights/COCO/1way_1shot/53/",
         "54": "./weights/COCO/1way_1shot/54/",
         "55": "./weights_unsupCL/COCO/1way_1shot/55/",
-        "56": "./weights_unsupCL/COCO/1way_1shot/56/"
+        "56": "./weights_unsupCL/COCO/1way_1shot/56/",
+        "57": "./weights_noCL/COCO/1way_1shot/57/",
+        "58": "./weights_pred_supCL/COCO/1way_1shot/58/",
+        "59": "./weights_pred_supCL/COCO/1way_1shot/59/",
+        "60": "./weights_pred_supCL/COCO/1way_1shot/60/",
+        "61": "./weights_pred_supCL/COCO/1way_1shot/61/",
+        "62": "./weights_pred_supCL/COCO/1way_1shot/62/",
+        "63": "./weights/COCO/1way_1shot/63/",
+        "64": "./weights_pred_supCL/COCO/1way_1shot/64/",
+        "65": "./weights_pred_supCL/COCO/1way_5shot/65/",
+        "66": "./weights/COCO/1way_1shot/66/",
+        "67": "./weights/COCO/1way_1shot/67/",
+        "68": "./weights/COCO/1way_5shot/68/",
+        "69": "./weights/COCO/1way_5shot/69/",
+        "70": "./weights/COCO/1way_5shot/70/",
+        "71": "./weights/COCO/1way_5shot/71/",
+        "72": "./weights/COCO/1way_1shot/72/",
+        "73": "./weights/COCO/1way_1shot/73/",
+        "74": "./weights/COCO/1way_1shot/74/",
+        "75": "./weights/COCO/1way_1shot/75/",
+        "76": "./weights/COCO/1way_1shot/76/",
+        "77": "./weights/COCO/1way_1shot/77/",
+        "78": "./weights/COCO/1way_1shot/78/"
     }
 }

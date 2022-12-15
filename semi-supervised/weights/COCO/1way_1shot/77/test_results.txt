@@ -1,0 +1,2 @@
+Results on run 77(split0)[N=1,K=1,M=1]:
+mIOU = tensor([0.8333, 0.0000]) ± tensor([0.1759, 0.0000])

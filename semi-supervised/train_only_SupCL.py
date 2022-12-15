@@ -1,4 +1,4 @@
-	from config import config
+from config import config
 import torch
 import numpy as np
 from tqdm import tqdm
@@ -107,6 +107,8 @@ for i, (q_index, sup_index, sup_graph, unsup_graph, task_graph, q_label) in tqdm
 	# ?
 	# call the loss function on task graph augs (query??) and obtain contrastive loss
 	sup_CL = supCL_fn(sup_embs[0], sup_graph.y)
+	if sup_CL == 'invalid':
+		continue
 	contrastive_loss = sup_CL 
 	episode_losses[0] += contrastive_loss.item()
 	episode_losses[1] += sup_CL.item()

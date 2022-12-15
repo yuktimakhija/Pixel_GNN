@@ -180,7 +180,7 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 	n = labelled_images[0].shape[0]
 	num_neighbors_inter = 1 #number of neighbours (between graphs)	
 	num_neighbors = 1 # max distance of neighbors
-	nn = n**2;
+	nn = n**2
 	alpha, beta = config['alpha'], config['beta']
 	dataset = config['dataset']
 	num_node_features = 3 if dataset in ['COCO'] else 1
@@ -460,6 +460,10 @@ def support_graph_matrix(labelled_images, labels, unlabeled_images, query_images
 				edge_weights_combined += ew
 				edges_combined[0] += e[0]
 				edges_combined[1] += e[1]
+		# now image has been put into the graphs, so bg sampling starts here
+		if i in query_index:
+			continue # will not sample query
+		
 	edges_lab = torch.tensor(edges_labelled, dtype=torch.long)
 	edges_unlab = torch.tensor(edges_unlabeled, dtype=torch.long)
 	edges_task = torch.tensor(edges_combined, dtype=torch.long)
